@@ -3,7 +3,7 @@
 ## Example
 
 ### 1. Create specific repository
-
+```
 import (
     "context"
     sq "github.com/Masterminds/squirrel"
@@ -77,9 +77,9 @@ func MyObjConverter(row pgx.Row) MyObj {
     }
     return myObj
 }
-
+```
 ### 2. Usage
-
+```
 dbClient, err := pg.NewPgDBClient(ctx, "dsn string")
 myRepository := repository.NewMyRepository(dbClient)
 ctx := context.Context
@@ -88,3 +88,4 @@ field2_value := "field2_value"
 id := myRepository.Create(ctx, field1_value, field2_value)
 newField1Value := myRepository.IncreaseField1(ctx, url)
 // At this point newField1Value equals 11
+```
