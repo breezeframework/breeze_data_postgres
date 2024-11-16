@@ -1,0 +1,90 @@
+# Golang module for CRUD database operations management
+
+## Example
+
+### 1. Create specific repository
+
+import (
+    "context"
+    sq "github.com/Masterminds/squirrel"
+)
+
+// Mandatory declare ID field
+type MyObj struct {
+   ID      int64
+   Field1  int64
+   Field2  string
+}
+
+type MyRepository interface {
+   IncreaseField1(ctx context.Context, id int64) int64
+   GetByField2(ctx context.Context, url string) MyStruct
+   breeze_data.CrudRepository[MyObj]
+}
+
+type myRepository struct {
+    breeze_data.CrudRepository[MyObj]
+}
+
+func (repo *myRepository) GetByField2(ctx context.Context, field2 string) MyStruct {
+    list := repo.GetBy(ctx, sq.Eq{"field2": field2})
+    if list != nil && len(*list) > 0 {
+        return (*list)[0]
+    }
+    var ret MyStruct
+    return rep
+}
+
+type myBuilders struct {
+    InsertBuilder            sq.InsertBuilder
+    SelectBuilder            sq.SelectBuilder
+    UpdateBuilder            sq.UpdateBuilder
+    DeleteBuilder            sq.DeleteBuilder
+    IncreaseField1Builder    sq.UpdateBuilder
+}
+
+var MyBuilders = myBuilders{
+    InsertBuilder: sq.Insert("MyObjTable").PlaceholderFormat(sq.Dollar).Columns("field1","field2"),
+    SelectBuilder: sq.Select("field1","field2").PlaceholderFormat(sq.Dollar).From("MyObjTable"),
+    UpdateBuilder: sq.Update("MyObjTable").PlaceholderFormat(sq.Dollar),
+    DeleteBuilder: sq.Delete("MyObjTable").PlaceholderFormat(sq.Dollar),
+    IncreaseField1Builder: sq.Update("MyObjTable").PlaceholderFormat(sq.Dollar).
+        Set("field1", sq.Expr("field1 + 1")).Suffix("RETURNING id, field1, field2"),
+}
+
+func NewMyRepository(db breeze_data.DbClient) MyRepository {
+    return &myRepository{
+        breeze_data.NewPostgreSQLCRUDRepository[MyObj](
+            db,
+            MyBuilders.InsertBuilder,
+            MyBuilders.SelectBuilder,
+            MyBuilders.UpdateBuilder,
+            MyBuilders.DeleteBuilder,
+            MyObjConverter,),
+    }
+}
+
+func (repo *WebPageRepositoryImpl) IncreaseField1(ctx context.Context, field2 string) int64 {
+    ret := repo.UpdateReturning(ctx, MyBuilders.IncreaseField1Builder.
+        Where(sq.Eq{"field2"": string}), MyObjConverter)
+    return ret.field1
+}
+
+func MyObjConverter(row pgx.Row) MyObj {
+    var myObj MyObj
+    if err := row.Scan(&myObj.ID, &myObj.field1, &myObj.field2); err != nil {
+        panic(err)
+    }
+    return myObj
+}
+
+### 2. Usage
+
+dbClient, err := pg.NewPgDBClient(ctx, "dsn string")
+myRepository := repository.NewMyRepository(dbClient)
+ctx := context.Context
+field1_value := 10
+field2_value := "field2_value"
+id := myRepository.Create(ctx, field1_value, field2_value)
+newField1Value := myRepository.IncreaseField1(ctx, url)
+// At this point newField1Value equals 11

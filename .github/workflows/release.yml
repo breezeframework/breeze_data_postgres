@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout breeze_data
+        uses: actions/checkout@v2
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          git fetch --tags
+          latest_tag=$(git tag --sort=-v:refname | head -n 1)
+          
+          echo "latest=$latest_tag" >> $GITHUB_ENV
+
+          if [ -z "$latest_tag" ]; then
+            echo "No tags found. Starting from v0.1.0."
+            latest_tag="v0.1.0"
+          else
+            echo "Latest tag is: $latest_tag"
+          fi
+
+          echo "::set-output name=latest::$latest_tag"
+      
+          echo "Latest tag is: $latest_tag"
+          echo "latest=$latest_tag" >> $GITHUB_ENV
+
+
+      - name: Create new tag
+        run: |
+          new_tag="$(echo ${{ env.latest }} | awk -F. -v OFS=. '{$NF++; print}')"
+          git tag $new_tag
+          git push git@github.com:breezeframework/breeze_data.git $new_tag
