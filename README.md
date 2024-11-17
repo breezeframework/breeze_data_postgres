@@ -87,21 +87,21 @@ func MyObjConverter(row pgx.Row) MyObj {
 ```
 ### 2. Usage
 ```
-	DSN := "connection string"
-	ctx := context.Background()
-	dbClient, err := pg.NewPgDBClient(ctx, DSN)
-	myRepository := NewMyRepository(dbClient)
-	field1_value := 10
-	field2_value := "field2_value"
-	id := myRepository.Create(ctx, field1_value, field2_value)
-	....
-	myRepository.GetById(ctx,id)
-	....
-	myRepository.GetByField2(ctx, field2_value)
-	....
-	myRepository.GetAll(ctx)
+    DSN := "connection string"
+    ctx := context.Background()
+    dbClient, err := pg.NewPgDBClient(ctx, DSN)
+    myRepository := NewMyRepository(dbClient)
+    field1_value := 10
+    field2_value := "field2_value"
+    id := myRepository.Create(ctx, field1_value, field2_value)
+    ....
+    myRepository.GetById(ctx,id)
+    ....
+    myRepository.GetByField2(ctx, field2_value)
+    ....
+    myRepository.GetAll(ctx)
     ....
     newField1Value := myRepository.IncreaseField1(ctx, id)
-	print(newField1Value) // 11
+    print(newField1Value) // 11
 
 ```
