@@ -86,6 +86,6 @@ ctx := context.Context
 field1_value := 10
 field2_value := "field2_value"
 id := myRepository.Create(ctx, field1_value, field2_value)
-newField1Value := myRepository.IncreaseField1(ctx, url)
+newField1Value := myRepository.IncreaseField1(ctx, field2_value)
 // At this point newField1Value equals 11
 ```
