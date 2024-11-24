@@ -53,7 +53,7 @@ func (repo *PostgreSQLCRUDRepository[T]) GetById(ctx context.Context, id int64) 
 	return repo.entityConverter(row)
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) ConvertToObjects(rows pgx.Rows) *[]T {
+func (repo *PostgreSQLCRUDRepository[T]) ConvertToObjects(rows pgx.Rows) []T {
 	var objs []T
 	for rows.Next() {
 		obj := repo.entityConverter(rows)
@@ -62,10 +62,10 @@ func (repo *PostgreSQLCRUDRepository[T]) ConvertToObjects(rows pgx.Rows) *[]T {
 	if err := rows.Err(); err != nil {
 		panic(err)
 	}
-	return &objs
+	return objs
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) GetAll(ctx context.Context) *[]T {
+func (repo *PostgreSQLCRUDRepository[T]) GetAll(ctx context.Context) []T {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -78,7 +78,7 @@ func (repo *PostgreSQLCRUDRepository[T]) GetAll(ctx context.Context) *[]T {
 	return objs
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) GetBy(ctx context.Context, where sq.Sqlizer) *[]T {
+func (repo *PostgreSQLCRUDRepository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
 	defer func() {
 		if r := recover(); r != nil {
 			errors.New(fmt.Sprintf("%v", r))

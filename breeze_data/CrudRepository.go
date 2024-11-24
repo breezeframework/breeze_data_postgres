@@ -9,8 +9,8 @@ import (
 type CrudRepository[T any] interface {
 	Create(ctx context.Context, values ...interface{}) int64
 	GetById(ctx context.Context, id int64) T
-	GetAll(ctx context.Context) *[]T
-	GetBy(ctx context.Context, where sq.Sqlizer) *[]T
+	GetAll(ctx context.Context) []T
+	GetBy(ctx context.Context, where sq.Sqlizer) []T
 	Delete(ctx context.Context, id int64)
 	UpdateReturning(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) T) T
 }
