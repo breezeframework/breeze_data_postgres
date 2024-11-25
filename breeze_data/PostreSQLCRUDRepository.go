@@ -40,7 +40,7 @@ func NewPostgreSQLCRUDRepository[T any](
 func (repo *PostgreSQLCRUDRepository[T]) Create(ctx context.Context, values ...interface{}) int64 {
 	builder := repo.insertBuilder.Suffix(RETURNING_ID).Values(values...)
 	var id int64
-	err := repo.db.API().QueryRowContextInsert(ctx, &builder).Scan(&id)
+	err := repo.db.API().QueryRowContextInsert(ctx, builder).Scan(&id)
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +49,7 @@ func (repo *PostgreSQLCRUDRepository[T]) Create(ctx context.Context, values ...i
 
 func (repo *PostgreSQLCRUDRepository[T]) GetById(ctx context.Context, id int64) T {
 	builder := repo.selectBuilder.Where(sq.Eq{idColumn: id})
-	row := repo.db.API().QueryRowContextSelect(ctx, &builder)
+	row := repo.db.API().QueryRowContextSelect(ctx, builder)
 	return repo.entityConverter(row)
 }
 
@@ -73,7 +73,7 @@ func (repo *PostgreSQLCRUDRepository[T]) GetAll(ctx context.Context) []T {
 			log.Print(err)
 		}
 	}()
-	rows := repo.db.API().QueryContextSelect(ctx, &repo.selectBuilder, nil)
+	rows := repo.db.API().QueryContextSelect(ctx, repo.selectBuilder, nil)
 	objs := repo.ConvertToObjects(rows)
 	return objs
 }
@@ -85,7 +85,7 @@ func (repo *PostgreSQLCRUDRepository[T]) GetBy(ctx context.Context, where sq.Sql
 		}
 	}()
 	builder := repo.selectBuilder.Where(where)
-	rows := repo.db.API().QueryContextSelect(ctx, &builder, nil)
+	rows := repo.db.API().QueryContextSelect(ctx, builder, nil)
 	objs := repo.ConvertToObjects(rows)
 	return objs
 }
@@ -95,10 +95,10 @@ func (repo *PostgreSQLCRUDRepository[T]) Delete(ctx context.Context, id int64) {
 }
 
 func (repo *PostgreSQLCRUDRepository[T]) Update(ctx context.Context, builder sq.UpdateBuilder) pgconn.CommandTag {
-	return repo.db.API().ExecUpdate(ctx, &builder)
+	return repo.db.API().ExecUpdate(ctx, builder)
 }
 
 func (repo *PostgreSQLCRUDRepository[T]) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) T) T {
-	row := repo.db.API().UpdateReturning(ctx, &builder)
+	row := repo.db.API().UpdateReturning(ctx, builder)
 	return entityConverter(row)
 }

@@ -22,7 +22,7 @@ type pg struct {
 	api *pgxpool.Pool
 }
 
-func (pg *pg) ExecUpdate(ctx context.Context, builder *sq.UpdateBuilder) pgconn.CommandTag {
+func (pg *pg) ExecUpdate(ctx context.Context, builder sq.UpdateBuilder) pgconn.CommandTag {
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		panic(err)
@@ -45,7 +45,7 @@ func (pg *pg) ExecUpdate(ctx context.Context, builder *sq.UpdateBuilder) pgconn.
 	return tag
 }
 
-func (pg *pg) QueryContextSelect(ctx context.Context, builder *sq.SelectBuilder, where map[string]interface{}) pgx.Rows {
+func (pg *pg) QueryContextSelect(ctx context.Context, builder sq.SelectBuilder, where map[string]interface{}) pgx.Rows {
 	if where != nil {
 		builder.Where(where)
 	}
@@ -71,7 +71,7 @@ func (pg *pg) QueryContextSelect(ctx context.Context, builder *sq.SelectBuilder,
 	return rows
 }
 
-func (pg *pg) QueryRowContextSelect(ctx context.Context, builder *sq.SelectBuilder) pgx.Row {
+func (pg *pg) QueryRowContextSelect(ctx context.Context, builder sq.SelectBuilder) pgx.Row {
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		panic(err)
@@ -88,7 +88,7 @@ func (pg *pg) QueryRowContextSelect(ctx context.Context, builder *sq.SelectBuild
 	return pg.api.QueryRow(ctx, query, args...)
 }
 
-func (pg *pg) QueryRowContextInsert(ctx context.Context, builder *sq.InsertBuilder) pgx.Row {
+func (pg *pg) QueryRowContextInsert(ctx context.Context, builder sq.InsertBuilder) pgx.Row {
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
@@ -106,7 +106,7 @@ func (pg *pg) QueryRowContextInsert(ctx context.Context, builder *sq.InsertBuild
 	return pg.api.QueryRow(ctx, query, args...)
 }
 
-func (pg *pg) UpdateReturning(ctx context.Context, builder *sq.UpdateBuilder) pgx.Row {
+func (pg *pg) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) pgx.Row {
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		panic(err)

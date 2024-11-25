@@ -48,11 +48,11 @@ type NamedQueryExecutor interface {
 }
 
 type QueryExecutor interface {
-	UpdateReturning(ctx context.Context, builder *squirrel.UpdateBuilder) pgx.Row
-	ExecUpdate(ctx context.Context, builder *squirrel.UpdateBuilder) pgconn.CommandTag
-	QueryContextSelect(ctx context.Context, builder *squirrel.SelectBuilder, where map[string]interface{}) pgx.Rows
-	QueryRowContextSelect(ctx context.Context, builder *squirrel.SelectBuilder) pgx.Row
-	QueryRowContextInsert(ctx context.Context, builder *squirrel.InsertBuilder) pgx.Row
+	UpdateReturning(ctx context.Context, builder squirrel.UpdateBuilder) pgx.Row
+	ExecUpdate(ctx context.Context, builder squirrel.UpdateBuilder) pgconn.CommandTag
+	QueryContextSelect(ctx context.Context, builder squirrel.SelectBuilder, where map[string]interface{}) pgx.Rows
+	QueryRowContextSelect(ctx context.Context, builder squirrel.SelectBuilder) pgx.Row
+	QueryRowContextInsert(ctx context.Context, builder squirrel.InsertBuilder) pgx.Row
 }
 
 type Pinger interface {
