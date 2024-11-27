@@ -2,12 +2,9 @@ package breeze_data
 
 import (
 	"context"
-	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/pkg/errors"
-	"log"
 )
 
 const (
@@ -66,24 +63,12 @@ func (repo *PostgreSQLCRUDRepository[T]) ConvertToObjects(rows pgx.Rows) []T {
 }
 
 func (repo *PostgreSQLCRUDRepository[T]) GetAll(ctx context.Context) []T {
-
-	defer func() {
-		if r := recover(); r != nil {
-			err := errors.New(fmt.Sprintf("%v", r))
-			log.Print(err)
-		}
-	}()
 	rows := repo.db.API().QueryContextSelect(ctx, repo.selectBuilder, nil)
 	objs := repo.ConvertToObjects(rows)
 	return objs
 }
 
 func (repo *PostgreSQLCRUDRepository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
-	defer func() {
-		if r := recover(); r != nil {
-			errors.New(fmt.Sprintf("%v", r))
-		}
-	}()
 	builder := repo.selectBuilder.Where(where)
 	rows := repo.db.API().QueryContextSelect(ctx, builder, nil)
 	objs := repo.ConvertToObjects(rows)

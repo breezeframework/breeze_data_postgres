@@ -2,10 +2,10 @@ package pg
 
 import (
 	"context"
+	"fmt"
 	"github.com/breezeframework/breeze_data/breeze_data"
 	"github.com/breezeframework/breeze_data/breeze_data/transaction"
 	"github.com/jackc/pgx/v5"
-
 	"github.com/pkg/errors"
 )
 
@@ -40,16 +40,18 @@ func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction
 
 		if err != nil {
 			if errRollback := tx.Rollback(ctx); errRollback != nil {
-				err = errors.Wrapf(err, "errRollback: %v", errRollback)
+				//errRollback := errors.Wrapf(err, "errRollback: %v", errRollback)
+				fmt.Println(errRollback)
 			}
 
-			return
+			panic(err)
 		}
 
 		if nil == err {
 			err = tx.Commit(ctx)
 			if err != nil {
 				err = errors.Wrap(err, "tx commit failed")
+				panic(err)
 			}
 		}
 	}()
@@ -58,6 +60,9 @@ func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction
 		err = errors.Wrap(err, "failed executing code inside transaction")
 	}
 
+	if err != nil {
+		panic(err)
+	}
 	return err
 }
 
