@@ -90,6 +90,14 @@ func MyObjConverter(row pgx.Row) MyObj {
     DSN := "connection string"
     ctx := context.Background()
     dbClient, err := pg.NewPgDBClient(ctx, DSN)
+    
+    // Define dbclient gracefull shutdown
+    closer.Add(dbClient.Close)
+    defer func() {
+		closer.CloseAll()
+		closer.Wait()
+	}()
+	
     myRepository := NewMyRepository(dbClient)
     field1_value := 10
     field2_value := "field2_value"
@@ -118,5 +126,4 @@ func MyObjConverter(row pgx.Row) MyObj {
 		}
 	)
     
-    dbClient.Close()
 ```
