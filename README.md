@@ -115,6 +115,7 @@ func MyObjConverter(row pgx.Row) MyObj {
 			}
 			// Commit
 			return nil
-		})
+		}
+	)
     
 ```
