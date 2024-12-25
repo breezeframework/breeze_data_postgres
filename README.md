@@ -3,7 +3,7 @@
 ## Example
 
 ### 1. Create specific repository
-```
+``` go
 
 package repository
 
@@ -86,7 +86,7 @@ func MyObjConverter(row pgx.Row) MyObj {
 
 ```
 ### 2. Usage
-```
+``` go
     DSN := "connection string"
     ctx := context.Background()
     dbClient, err := pg.NewPgDBClient(ctx, DSN)
