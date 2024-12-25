@@ -118,4 +118,5 @@ func MyObjConverter(row pgx.Row) MyObj {
 		}
 	)
     
+    dbClient.Close()
 ```
