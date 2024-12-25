@@ -94,6 +94,10 @@ func MyObjConverter(row pgx.Row) MyObj {
     // Define dbclient gracefull shutdown
     closer.Add(dbClient.Close)
     defer func() {
+        if r := recover(); r != nil {
+            // handle panic errors
+        }
+        // Close db connection
 		closer.CloseAll()
 		closer.Wait()
     }()
