@@ -96,7 +96,7 @@ func MyObjConverter(row pgx.Row) MyObj {
     defer func() {
 		closer.CloseAll()
 		closer.Wait()
-	}()
+    }()
 	
     myRepository := NewMyRepository(dbClient)
     field1_value := 10
