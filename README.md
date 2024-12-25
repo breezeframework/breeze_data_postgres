@@ -117,5 +117,4 @@ func MyObjConverter(row pgx.Row) MyObj {
 			return nil
 		})
     
-
 ```
