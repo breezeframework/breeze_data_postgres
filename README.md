@@ -103,5 +103,19 @@ func MyObjConverter(row pgx.Row) MyObj {
     ....
     newField1Value := myRepository.IncreaseField1(ctx, id)
     print(newField1Value) // 11
+    
+    // Transaction
+    err := dbClient.RunTransaction(ctx, transaction.TxOptions{IsoLevel: transaction.ReadCommitted},
+		func(ctx context.Context) error {
+			id1 := myRepository.Create(ctx, ...)
+			id2 := myRepository.Create(ctx, ...)
+			if(...some error condition...){
+			    // Rollback
+			    return errors.Wrap(err, "Error condition achieved")
+			}
+			// Commit
+			return nil
+		})
+    
 
 ```
