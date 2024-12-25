@@ -98,8 +98,8 @@ func MyObjConverter(row pgx.Row) MyObj {
             // handle panic errors
         }
         // Close db connection
-		closer.CloseAll()
-		closer.Wait()
+        closer.CloseAll()
+        closer.Wait()
     }()
 	
     myRepository := NewMyRepository(dbClient)
