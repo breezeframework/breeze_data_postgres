@@ -42,9 +42,8 @@ func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction
 			if errRollback := tx.Rollback(ctx); errRollback != nil {
 				//errRollback := errors.Wrapf(err, "errRollback: %v", errRollback)
 				fmt.Println(errRollback)
+				panic(errRollback)
 			}
-
-			panic(err)
 		}
 
 		if nil == err {
