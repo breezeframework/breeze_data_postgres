@@ -35,7 +35,7 @@ func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction
 
 	defer func() {
 		if r := recover(); r != nil {
-			err = errors.Errorf("panic recovered: %w", r)
+			err = errors.Errorf("[PgTransactionManager] panic recovered: %w", r)
 		}
 
 		if err != nil {
