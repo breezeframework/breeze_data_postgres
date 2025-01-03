@@ -79,7 +79,16 @@ func (repo *PostgreSQLCRUDRepository[T]) Delete(ctx context.Context, id int64) i
 	return repo.db.API().ExecDelete(ctx, builder)
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) Update(ctx context.Context, builder sq.UpdateBuilder) int64 {
+func (repo *PostgreSQLCRUDRepository[T]) Update(ctx context.Context,
+	fields map[string]interface{}, where string, args ...interface{}) int64 {
+	builder := repo.updateBuilder
+	for column, value := range fields {
+		builder = builder.Set(column, value)
+	}
+
+	if where != "" {
+		builder = builder.Where(where, args...)
+	}
 	return repo.db.API().ExecUpdate(ctx, builder)
 }
 
