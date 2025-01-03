@@ -74,7 +74,8 @@ func (repo *PostgreSQLCRUDRepository[T]) GetBy(ctx context.Context, where sq.Sql
 	return objs
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) Delete(ctx context.Context, builder sq.DeleteBuilder) int64 {
+func (repo *PostgreSQLCRUDRepository[T]) Delete(ctx context.Context, id int64) int64 {
+	builder := repo.deleteBuilder.Where(sq.Eq{idColumn: id})
 	return repo.db.API().ExecDelete(ctx, builder)
 }
 
