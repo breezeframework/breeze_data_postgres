@@ -5,7 +5,6 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/breezeframework/breeze_data/breeze_data/transaction"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type DbClient interface {
@@ -49,7 +48,8 @@ type NamedQueryExecutor interface {
 
 type QueryExecutor interface {
 	UpdateReturning(ctx context.Context, builder squirrel.UpdateBuilder) pgx.Row
-	ExecUpdate(ctx context.Context, builder squirrel.UpdateBuilder) pgconn.CommandTag
+	ExecDelete(ctx context.Context, builder squirrel.DeleteBuilder) int64
+	ExecUpdate(ctx context.Context, builder squirrel.UpdateBuilder) int64
 	QueryContextSelect(ctx context.Context, builder squirrel.SelectBuilder, where map[string]interface{}) pgx.Rows
 	QueryRowContextSelect(ctx context.Context, builder squirrel.SelectBuilder) pgx.Row
 	QueryRowContextInsert(ctx context.Context, builder squirrel.InsertBuilder) pgx.Row

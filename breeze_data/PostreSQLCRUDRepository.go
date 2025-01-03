@@ -4,7 +4,6 @@ import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const (
@@ -75,11 +74,11 @@ func (repo *PostgreSQLCRUDRepository[T]) GetBy(ctx context.Context, where sq.Sql
 	return objs
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) Delete(ctx context.Context, id int64) {
-	panic("implement me")
+func (repo *PostgreSQLCRUDRepository[T]) Delete(ctx context.Context, builder sq.DeleteBuilder) int64 {
+	return repo.db.API().ExecDelete(ctx, builder)
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) Update(ctx context.Context, builder sq.UpdateBuilder) pgconn.CommandTag {
+func (repo *PostgreSQLCRUDRepository[T]) Update(ctx context.Context, builder sq.UpdateBuilder) int64 {
 	return repo.db.API().ExecUpdate(ctx, builder)
 }
 

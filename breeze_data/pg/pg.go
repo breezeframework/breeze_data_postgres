@@ -22,7 +22,30 @@ type pg struct {
 	api *pgxpool.Pool
 }
 
-func (pg *pg) ExecUpdate(ctx context.Context, builder sq.UpdateBuilder) pgconn.CommandTag {
+func (pg pg) ExecDelete(ctx context.Context, builder sq.DeleteBuilder) int64 {
+	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
+	if err != nil {
+		panic(err)
+	}
+
+	log.Printf("[ExecDelete] query: %s", query)
+	log.Printf("[ExecDelete] args: %+v", args)
+	log.Printf("[ExecDelete] err: %+v", err)
+	tx, ok := ctx.Value(TxKey).(pgx.Tx)
+	var tag pgconn.CommandTag
+	if ok {
+		tag, err = tx.Exec(ctx, query, args...)
+	} else {
+		tag, err = pg.api.Exec(ctx, query, args...)
+	}
+	if err != nil {
+		log.Printf("err: %+v", err)
+		log.Panic(err)
+	}
+	return tag.RowsAffected()
+}
+
+func (pg *pg) ExecUpdate(ctx context.Context, builder sq.UpdateBuilder) int64 {
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		panic(err)
@@ -42,7 +65,7 @@ func (pg *pg) ExecUpdate(ctx context.Context, builder sq.UpdateBuilder) pgconn.C
 		log.Printf("err: %+v", err)
 		log.Panic(err)
 	}
-	return tag
+	return tag.RowsAffected()
 }
 
 func (pg *pg) QueryContextSelect(ctx context.Context, builder sq.SelectBuilder, where map[string]interface{}) pgx.Rows {
