@@ -79,14 +79,21 @@ func (repo *PostgreSQLCRUDRepository[T]) Delete(ctx context.Context, id int64) i
 	return repo.db.API().ExecDelete(ctx, builder)
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) Update(ctx context.Context,
-	fields map[string]interface{}, where sq.Sqlizer) int64 {
-	builder := repo.updateBuilder.Where(where)
+func updateInternal(ctx context.Context, api DbApi, updateBuilder sq.UpdateBuilder, fields map[string]interface{}) int64 {
 	for column, value := range fields {
-		builder = builder.Set(column, value)
+		updateBuilder = updateBuilder.Set(column, value)
 	}
+	return api.ExecUpdate(ctx, updateBuilder)
+}
 
-	return repo.db.API().ExecUpdate(ctx, builder)
+func (repo *PostgreSQLCRUDRepository[T]) Update(ctx context.Context, fields map[string]interface{}, id int64) int64 {
+	builder := repo.updateBuilder.Where(sq.Eq{idColumn: id})
+	return updateInternal(ctx, repo.db.API(), builder, fields)
+}
+
+func (repo *PostgreSQLCRUDRepository[T]) UpdateCollection(ctx context.Context, fields map[string]interface{}, where sq.Sqlizer) int64 {
+	builder := repo.updateBuilder.Where(where)
+	return updateInternal(ctx, repo.db.API(), builder, fields)
 }
 
 func (repo *PostgreSQLCRUDRepository[T]) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) T) T {

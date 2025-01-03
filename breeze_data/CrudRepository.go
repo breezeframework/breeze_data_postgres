@@ -12,6 +12,7 @@ type CrudRepository[T any] interface {
 	GetAll(ctx context.Context) []T
 	GetBy(ctx context.Context, where sq.Sqlizer) []T
 	Delete(ctx context.Context, id int64) int64
-	Update(ctx context.Context, fields map[string]interface{}, where sq.Sqlizer) int64
+	UpdateCollection(ctx context.Context, fields map[string]interface{}, where sq.Sqlizer) int64
+	Update(ctx context.Context, fields map[string]interface{}, id int64) int64
 	UpdateReturning(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) T) T
 }
