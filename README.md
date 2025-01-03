@@ -115,6 +115,20 @@ func MyObjConverter(row pgx.Row) MyObj {
     ....
     newField1Value := myRepository.IncreaseField1(ctx, id)
     print(newField1Value) // 11
+    .....
+    
+   fields := map[string]interface{}{"field2": "updated_field2"}
+
+   updated := myRepository.Update(ctx, fields, id)
+   if updated != 1 {
+      return errors.New("MyObject not updated")
+   }
+   
+   where := squirrel.Eq{"field2": field2}
+   updated = myRepository.UpdateCollection(ctx, fields, where)
+   if updated == 0 {
+      return errors.New("No objects was updated")
+   }
     
     // Transaction
     err := dbClient.RunTransaction(ctx, transaction.TxOptions{IsoLevel: transaction.ReadCommitted},
@@ -129,4 +143,7 @@ func MyObjConverter(row pgx.Row) MyObj {
 			return nil
 		}
    )
+   if err != nil {
+     ...  // handle the error
+   }
 ```
