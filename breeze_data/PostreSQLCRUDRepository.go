@@ -86,7 +86,7 @@ func (repo *PostgreSQLCRUDRepository[T]) Update(ctx context.Context,
 		builder = builder.Set(column, value)
 	}
 
-	if where != "" {
+	if len(where) > 0 {
 		builder = builder.Where(where, args...)
 	}
 	return repo.db.API().ExecUpdate(ctx, builder)
