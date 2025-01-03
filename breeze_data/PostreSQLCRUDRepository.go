@@ -80,15 +80,12 @@ func (repo *PostgreSQLCRUDRepository[T]) Delete(ctx context.Context, id int64) i
 }
 
 func (repo *PostgreSQLCRUDRepository[T]) Update(ctx context.Context,
-	fields map[string]interface{}, where string, args ...interface{}) int64 {
-	builder := repo.updateBuilder
+	fields map[string]interface{}, where sq.Sqlizer) int64 {
+	builder := repo.updateBuilder.Where(where)
 	for column, value := range fields {
 		builder = builder.Set(column, value)
 	}
 
-	if len(where) > 0 {
-		builder = builder.Where(where, args...)
-	}
 	return repo.db.API().ExecUpdate(ctx, builder)
 }
 
