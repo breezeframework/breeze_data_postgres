@@ -9,7 +9,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout breeze_data
+      - name: Checkout breeze_data_postgres
         uses: actions/checkout@v2
 
       - name: Set up SSH key

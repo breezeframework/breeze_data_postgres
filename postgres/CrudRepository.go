@@ -1,4 +1,4 @@
-package breeze_data
+package postgres
 
 import (
 	"context"

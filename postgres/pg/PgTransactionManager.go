@@ -3,23 +3,23 @@ package pg
 import (
 	"context"
 	"fmt"
-	"github.com/breezeframework/breeze_data/breeze_data"
-	"github.com/breezeframework/breeze_data/breeze_data/transaction"
+	"github.com/breezeframework/breeze_data/postgres"
+	"github.com/breezeframework/breeze_data/postgres/transaction"
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
 )
 
 type PgTransactionManager struct {
-	db breeze_data.Transactor
+	db postgres.Transactor
 }
 
-func NewPgTransactionManager(db breeze_data.Transactor) *PgTransactionManager {
+func NewPgTransactionManager(db postgres.Transactor) *PgTransactionManager {
 	return &PgTransactionManager{
 		db: db,
 	}
 }
 
-func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction.TxOptions, fn breeze_data.TransactionalFlow) (err error) {
+func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction.TxOptions, fn postgres.TransactionalFlow) (err error) {
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
 		return fn(ctx)
@@ -73,7 +73,7 @@ func toPgOptions(txOptions transaction.TxOptions) pgx.TxOptions {
 	}
 }
 
-/*func (m *PgTransactionManager) ReadCommitted(ctx context.Context, f breeze_data.TransactionalFlow) error {
+/*func (m *PgTransactionManager) ReadCommitted(ctx context.Context, f postgres.TransactionalFlow) error {
 	txOpts := pgx.TxOptions{IsoLevel: pgx.ReadCommitted}
 	return m.transaction(ctx, txOpts, f)
 }*/

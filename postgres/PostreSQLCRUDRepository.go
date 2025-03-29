@@ -1,4 +1,4 @@
-package breeze_data
+package postgres
 
 import (
 	"context"
@@ -26,14 +26,14 @@ func NewPostgreSQLCRUDRepository[T any](
 	selectBuilder sq.SelectBuilder,
 	updateBuilder sq.UpdateBuilder,
 	deleteBuilder sq.DeleteBuilder,
-	entityConverter func(row pgx.Row) T) CrudRepository[T] {
-	return &PostgreSQLCRUDRepository[T]{
+	entityConverter func(row pgx.Row) T) PostgreSQLCRUDRepository[T] {
+	return PostgreSQLCRUDRepository[T]{
 		db:            db,
 		insertBuilder: insertBuilder, selectBuilder: selectBuilder, updateBuilder: updateBuilder, deleteBuilder: deleteBuilder,
 		entityConverter: entityConverter}
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) Create(ctx context.Context, values ...interface{}) int64 {
+func (repo PostgreSQLCRUDRepository[T]) Create(ctx context.Context, values ...interface{}) int64 {
 	builder := repo.insertBuilder.Suffix(RETURNING_ID).Values(values...)
 	var id int64
 	err := repo.db.API().QueryRowContextInsert(ctx, builder).Scan(&id)
@@ -43,13 +43,13 @@ func (repo *PostgreSQLCRUDRepository[T]) Create(ctx context.Context, values ...i
 	return id
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) GetById(ctx context.Context, id int64) T {
+func (repo PostgreSQLCRUDRepository[T]) GetById(ctx context.Context, id int64) T {
 	builder := repo.selectBuilder.Where(sq.Eq{idColumn: id})
 	row := repo.db.API().QueryRowContextSelect(ctx, builder)
 	return repo.entityConverter(row)
 }
 
-func (repo *PostgreSQLCRUDRepository[T]) ConvertToObjects(rows pgx.Rows) []T {
+func (repo PostgreSQLCRUDRepository[T]) ConvertToObjects(rows pgx.Rows) []T {
 	var objs []T
 	for rows.Next() {
 		obj := repo.entityConverter(rows)
