@@ -1,4 +1,4 @@
-module github.com/breezeframework/breeze_data
+module github.com/breezeframework/breeze_data_postgres
 
 go 1.23.0
 
