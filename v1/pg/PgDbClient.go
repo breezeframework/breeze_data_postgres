@@ -2,23 +2,23 @@ package pg
 
 import (
 	"context"
-	"github.com/breezeframework/breeze_data/postgres"
-	"github.com/breezeframework/breeze_data/postgres/transaction"
+	lib "github.com/breezeframework/breeze_data_postgres/v1"
+	"github.com/breezeframework/breeze_data_postgres/v1/transaction"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/pkg/errors"
 )
 
 type pgDbClient struct {
-	masterDBC          postgres.DbApi
+	masterDBC          lib.DbApi
 	transactionManager *PgTransactionManager
 }
 
-func (c *pgDbClient) RunTransaction(ctx context.Context, txOpts transaction.TxOptions, f postgres.TransactionalFlow) error {
+func (c *pgDbClient) RunTransaction(ctx context.Context, txOpts transaction.TxOptions, f lib.TransactionalFlow) error {
 	return c.transactionManager.Transaction(ctx, txOpts, f)
 }
 
-func NewPgDBClient(ctx context.Context, dsn string) (postgres.DbClient, error) {
+func NewPgDBClient(ctx context.Context, dsn string) (lib.DbClient, error) {
 	dbc, err := pgxpool.New(ctx, dsn)
 	if err != nil {
 		return nil, errors.Errorf("failed to connect to db: %v", err)
@@ -30,7 +30,7 @@ func NewPgDBClient(ctx context.Context, dsn string) (postgres.DbClient, error) {
 	}, nil
 }
 
-func (c *pgDbClient) API() postgres.DbApi {
+func (c *pgDbClient) API() lib.DbApi {
 	return c.masterDBC
 }
 

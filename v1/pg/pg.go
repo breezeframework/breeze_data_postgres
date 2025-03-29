@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/breezeframework/breeze_data/postgres"
-	"github.com/breezeframework/breeze_data/postgres/prettier"
+	lib "github.com/breezeframework/breeze_data_postgres/v1"
+	"github.com/breezeframework/breeze_data_postgres/v1/prettier"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -145,7 +145,7 @@ func (pg *pg) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) pgx
 
 	return pg.api.QueryRow(ctx, query, args...)
 }
-func NewDB(dbc *pgxpool.Pool) postgres.DbApi {
+func NewDB(dbc *pgxpool.Pool) lib.DbApi {
 	return &pg{
 		api: dbc,
 	}
@@ -173,7 +173,7 @@ func (pg *pg) ScanAllContext(ctx context.Context, dest interface{}, q db.Query, 
 	return pgxscan.ScanAll(dest, rows)
 }*/
 
-func (pg *pg) ExecContext(ctx context.Context, q postgres.Query, args ...interface{}) (pgconn.CommandTag, error) {
+func (pg *pg) ExecContext(ctx context.Context, q lib.Query, args ...interface{}) (pgconn.CommandTag, error) {
 	logQuery(ctx, q, args...)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
@@ -184,7 +184,7 @@ func (pg *pg) ExecContext(ctx context.Context, q postgres.Query, args ...interfa
 	return pg.api.Exec(ctx, q.QueryRaw, args...)
 }
 
-func (pg *pg) QueryContext(ctx context.Context, q postgres.Query, args ...interface{}) (pgx.Rows, error) {
+func (pg *pg) QueryContext(ctx context.Context, q lib.Query, args ...interface{}) (pgx.Rows, error) {
 	logQuery(ctx, q, args...)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
@@ -195,7 +195,7 @@ func (pg *pg) QueryContext(ctx context.Context, q postgres.Query, args ...interf
 	return pg.api.Query(ctx, q.QueryRaw, args...)
 }
 
-func (pg *pg) QueryRowContext(ctx context.Context, q postgres.Query, args ...interface{}) pgx.Row {
+func (pg *pg) QueryRowContext(ctx context.Context, q lib.Query, args ...interface{}) pgx.Row {
 	logQuery(ctx, q, args...)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
@@ -222,7 +222,7 @@ func MakeContextTx(ctx context.Context, tx pgx.Tx) context.Context {
 	return context.WithValue(ctx, TxKey, tx)
 }
 
-func logQuery(ctx context.Context, q postgres.Query, args ...interface{}) {
+func logQuery(ctx context.Context, q lib.Query, args ...interface{}) {
 	prettyQuery := prettier.Pretty(q.QueryRaw, prettier.PlaceholderDollar, args...)
 	log.Println(
 		ctx,

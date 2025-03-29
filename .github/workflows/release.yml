@@ -44,4 +44,4 @@ jobs:
         run: |
           new_tag="$(echo ${{ env.latest }} | awk -F. -v OFS=. '{$NF++; print}')"
           git tag $new_tag
-          git push git@github.com:breezeframework/breeze_data.git $new_tag
+          git push git@github.com:breezeframework/breeze_data_postgres.git $new_tag

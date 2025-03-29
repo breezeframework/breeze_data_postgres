@@ -1,9 +1,9 @@
-package postgres
+package v1
 
 import (
 	"context"
 	"github.com/Masterminds/squirrel"
-	"github.com/breezeframework/breeze_data/postgres/transaction"
+	"github.com/breezeframework/breeze_data_postgres/v1/transaction"
 	"github.com/jackc/pgx/v5"
 )
 
