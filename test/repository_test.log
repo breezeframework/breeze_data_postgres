@@ -1,0 +1,82 @@
+GOROOT=/workspace/tools/go/go_sdk/go1.24.0 #gosetup
+GOPATH=/home/user/go #gosetup
+/workspace/tools/go/go_sdk/go1.24.0/bin/go test -c -o /home/user/.cache/JetBrains/GoLand2024.3/tmp/GoLand/___TestMyRepositoryIntegration_in_github_com_simpleGorm_pg_test.test github.com/simpleGorm/pg/test #gosetup
+/workspace/tools/go/go_sdk/go1.24.0/bin/go tool test2json -t /home/user/.cache/JetBrains/GoLand2024.3/tmp/GoLand/___TestMyRepositoryIntegration_in_github_com_simpleGorm_pg_test.test -test.v=test2json -test.paniconexit0 -test.run ^\QTestMyRepositoryIntegration\E$ #gosetup
+=== RUN   TestMyRepositoryIntegration
+The files belonging to this database system will be owned by user "postgres".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "en_US.utf8".
+The default database encoding has accordingly been set to "UTF8".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+fixing permissions on existing directory /var/lib/postgresql/data ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default max_connections ... 100
+selecting default shared_buffers ... 128MB
+selecting default time zone ... UTC
+creating configuration files ... ok
+running bootstrap script ... ok
+sh: locale: not found
+2025-03-30 22:42:53.482 UTC [35] WARNING:  no usable system locales were found
+performing post-bootstrap initialization ... ok
+initdb: warning: enabling "trust" authentication for local connections
+initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+syncing data to disk ... ok
+
+
+Success. You can now start the database server using:
+
+    pg_ctl -D /var/lib/postgresql/data -l logfile start
+
+waiting for server to start....2025-03-30 22:42:54.124 GMT [41] LOG:  starting PostgreSQL 16.8 on x86_64-pc-linux-musl, compiled by gcc (Alpine 14.2.0) 14.2.0, 64-bit
+2025-03-30 22:42:54.125 GMT [41] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-03-30 22:42:54.126 GMT [44] LOG:  database system was shut down at 2025-03-30 22:42:53 GMT
+2025-03-30 22:42:54.128 GMT [41] LOG:  database system is ready to accept connections
+ done
+server started
+2025-03-30 22:42:54.224 GMT [50] LOG:  statement: SELECT 1 FROM pg_database WHERE datname = 'users' ;
+2025-03-30 22:42:54.229 GMT [52] LOG:  statement: CREATE DATABASE "users" ;
+CREATE DATABASE
+
+
+/usr/local/bin/docker-entrypoint.sh: running /docker-entrypoint-initdb.d/init-user-db.sh
+2025-03-30 22:42:54.259 GMT [55] LOG:  statement: CREATE TABLE IF NOT EXISTS MyObjTable (
+	        id SERIAL PRIMARY KEY,
+	        field1 INT,
+	        field2 TEXT
+	    );
+CREATE TABLE
+2025-03-30 22:42:54.262 GMT [55] LOG:  statement: INSERT INTO MyObjTable  (id,field1,field2) values(1,5,'str');
+INSERT 0 1
+
+waiting for server to shut down....2025-03-30 22:42:54.263 GMT [41] LOG:  received fast shutdown request
+2025-03-30 22:42:54.263 GMT [41] LOG:  aborting any active transactions
+2025-03-30 22:42:54.265 GMT [41] LOG:  background worker "logical replication launcher" (PID 47) exited with exit code 1
+2025-03-30 22:42:54.265 GMT [42] LOG:  shutting down
+2025-03-30 22:42:54.265 GMT [42] LOG:  checkpoint starting: shutdown immediate
+2025-03-30 22:42:54.271 GMT [42] LOG:  checkpoint complete: wrote 934 buffers (5.7%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.006 s, sync=0.001 s, total=0.007 s; sync files=0, longest=0.000 s, average=0.000 s; distance=4287 kB, estimate=4287 kB; lsn=0/191FB88, redo lsn=0/191FB88
+2025-03-30 22:42:54.275 GMT [41] LOG:  database system is shut down
+ done
+server stopped
+
+PostgreSQL init process complete; ready for start up.
+
+2025-03-30 22:42:54.376 GMT [1] LOG:  starting PostgreSQL 16.8 on x86_64-pc-linux-musl, compiled by gcc (Alpine 14.2.0) 14.2.0, 64-bit
+2025-03-30 22:42:54.376 GMT [1] LOG:  listening on IPv6 address "::1", port 5432
+2025-03-30 22:42:54.376 GMT [1] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-03-30 22:42:54.376 GMT [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-03-30 22:42:54.378 GMT [60] LOG:  database system was shut down at 2025-03-30 22:42:54 GMT
+2025-03-30 22:42:54.380 GMT [1] LOG:  database system is ready to accept connections
+
+    repository_test.go:51: Postgres URI: postgres://postgres:postgres@localhost:32838/users?sslmode=disable
+    repository_test.go:55: failed: failed to connect to `user=postgres database=users`: 127.0.0.1:32838 (localhost): failed to receive message: read tcp 127.0.0.1:34070->127.0.0.1:32838: read: connection reset by peer
+--- FAIL: TestMyRepositoryIntegration (2.15s)
+
+FAIL
+
+Process finished with the exit code 1
+
