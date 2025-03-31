@@ -144,11 +144,6 @@ func (pg pg) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) pgx.
 
 	return pg.api.QueryRow(ctx, query, args...)
 }
-func NewDB(dbc *pgxpool.Pool) pg {
-	return pg{
-		api: dbc,
-	}
-}
 
 /*func (pkg *pkg) ScanOneContext(ctx context.Context, dest interface{}, q db.Query, args ...interface{}) error {
 	logQuery(ctx, q, args...)
