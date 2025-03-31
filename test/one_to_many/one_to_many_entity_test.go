@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/closer"
-	"github.com/simpleGorm/pg/test/one_to_many"
+	"github.com/simpleGorm/pg/test/one_to_many/repository"
 	"github.com/simpleGorm/pg/test/test_utils"
 	"github.com/stretchr/testify/require"
 	"reflect"
@@ -34,9 +34,9 @@ func TestOneToManyEntityRepositoryIT(t *testing.T) {
 		// Close db connection
 	}()
 
-	parentRepository := oneToMany_entity_repository.NewParentEntityRepository(dbClient)
-	child1Repository := oneToMany_entity_repository.NewChild1EntityRepository(dbClient)
-	child2Repository := oneToMany_entity_repository.NewChild2EntityRepository(dbClient)
+	parentRepository := repository.NewParentEntityRepository(dbClient)
+	child1Repository := repository.NewChild1EntityRepository(dbClient)
+	child2Repository := repository.NewChild2EntityRepository(dbClient)
 
 	parentId := parentRepository.Create(ctx, "PARENT")
 	child1Repository.Create(ctx, "TYPE1", parentId)
@@ -45,7 +45,7 @@ func TestOneToManyEntityRepositoryIT(t *testing.T) {
 	child2Repository.Create(ctx, 0.7, parentId)
 	parentEntity := parentRepository.GetById(ctx, parentId)
 
-	var expected oneToMany_entity_repository.ParentEntity
+	var expected repository.ParentEntity
 	err = json.Unmarshal([]byte(EXPECTED), &expected)
 	require.NoError(t, err)
 	if !reflect.DeepEqual(expected, parentEntity) {
