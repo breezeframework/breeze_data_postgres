@@ -11,77 +11,58 @@ package repository
 import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/simpleGorm/pg"
 	"github.com/jackc/pgx/v5"
+	"github.com/simpleGorm/pg"
 )
 
 // Mandatory declare ID field
-type MyObj struct {
+type TestObj struct {
 	ID     int64
 	Field1 int64
 	Field2 string
 }
 
-type MyRepository interface {
-	IncreaseField1(ctx context.Context, id int64) int64
-	GetByField2(ctx context.Context, url string) MyObj
-	pg.CrudRepository[MyObj]
+type TestObjRepository struct {
+	pg.Repository[TestObj]
 }
 
-type myRepository struct {
-	pg.CrudRepository[MyObj]
-}
+const TABLE_NAME = "TestObjTable"
 
-func (repo *myRepository) GetByField2(ctx context.Context, field2 string) MyObj {
-	list := repo.GetBy(ctx, sq.Eq{"field2": field2})
-	if list != nil && len(*list) > 0 {
-		return (*list)[0]
-	}
-	var ret MyObj
-	return ret
-}
+var increaseField1Builder = sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar).
+	Set("field1", sq.Expr("field1 + 1")).Suffix("RETURNING id, field1, field2")
 
-type myBuilders struct {
-	InsertBuilder         sq.InsertBuilder
-	SelectBuilder         sq.SelectBuilder
-	UpdateBuilder         sq.UpdateBuilder
-	DeleteBuilder         sq.DeleteBuilder
-	IncreaseField1Builder sq.UpdateBuilder
-}
-
-var MyBuilders = myBuilders{
-	InsertBuilder: sq.Insert("MyObjTable").PlaceholderFormat(sq.Dollar).Columns("field1", "field2"),
-	SelectBuilder: sq.Select("field1", "field2").PlaceholderFormat(sq.Dollar).From("MyObjTable"),
-	UpdateBuilder: sq.Update("MyObjTable").PlaceholderFormat(sq.Dollar),
-	DeleteBuilder: sq.Delete("MyObjTable").PlaceholderFormat(sq.Dollar),
-	IncreaseField1Builder: sq.Update("MyObjTable").PlaceholderFormat(sq.Dollar).
-		Set("field1", sq.Expr("field1 + 1")).Suffix("RETURNING id, field1, field2"),
-}
-
-func NewMyRepository(db pg.DbClient) MyRepository {
-	return &myRepository{
-		pg.NewPostgreSQLCRUDRepository[MyObj](
+func NewMyObjRepository(db pg.DbClient) TestObjRepository {
+	return TestObjRepository{
+		pg.NewPostgreRepository[TestObj](
 			db,
-			MyBuilders.InsertBuilder,
-			MyBuilders.SelectBuilder,
-			MyBuilders.UpdateBuilder,
-			MyBuilders.DeleteBuilder,
-			MyObjConverter),
+			sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns("field1", "field2"),
+			sq.Select("id", "field1", "field2").PlaceholderFormat(sq.Dollar).From(TABLE_NAME),
+			sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar),
+			sq.Delete(TABLE_NAME).PlaceholderFormat(sq.Dollar),
+			myObjConverter),
 	}
 }
 
-func (repo *myRepository) IncreaseField1(ctx context.Context, id int64) int64 {
-	ret := repo.UpdateReturning(ctx, MyBuilders.IncreaseField1Builder.
-		Where(sq.Eq{"id": id}), MyObjConverter)
-	return ret.Field1
-}
-
-func MyObjConverter(row pgx.Row) MyObj {
-	var myObj MyObj
+func myObjConverter(row pgx.Row) TestObj {
+	var myObj TestObj
 	if err := row.Scan(&myObj.ID, &myObj.Field1, &myObj.Field2); err != nil {
 		panic(err)
 	}
 	return myObj
+}
+
+func (repo *TestObjRepository) GetOneByField2(ctx context.Context, field2 string) TestObj {
+	list := repo.GetBy(ctx, sq.Eq{"field2": field2})
+	if list != nil && len(list) > 0 {
+		return (list)[0]
+	}
+	var ret TestObj
+	return ret
+}
+
+func (repo *TestObjRepository) IncreaseField1(ctx context.Context, id int64) int64 {
+	updated := repo.UpdateReturning(ctx, increaseField1Builder.Where(sq.Eq{"id": id}))
+	return updated.Field1
 }
 
 ```
