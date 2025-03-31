@@ -1,25 +1,24 @@
-package pg
+package pg_api
 
 import (
 	"context"
 	"fmt"
-	"github.com/breezeframework/breeze_data/breeze_data"
-	"github.com/breezeframework/breeze_data/breeze_data/transaction"
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
+	"github.com/simpleGorm/pg/internal/transaction"
 )
 
 type PgTransactionManager struct {
-	db breeze_data.Transactor
+	db Transactor
 }
 
-func NewPgTransactionManager(db breeze_data.Transactor) *PgTransactionManager {
+func NewPgTransactionManager(db Transactor) *PgTransactionManager {
 	return &PgTransactionManager{
 		db: db,
 	}
 }
 
-func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction.TxOptions, fn breeze_data.TransactionalFlow) (err error) {
+func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction.TxOptions, fn TransactionalFlow) (err error) {
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
 		return fn(ctx)
@@ -73,7 +72,7 @@ func toPgOptions(txOptions transaction.TxOptions) pgx.TxOptions {
 	}
 }
 
-/*func (m *PgTransactionManager) ReadCommitted(ctx context.Context, f breeze_data.TransactionalFlow) error {
+/*func (m *PgTransactionManager) ReadCommitted(ctx context.Context, f pkg.TransactionalFlow) error {
 	txOpts := pgx.TxOptions{IsoLevel: pgx.ReadCommitted}
 	return m.transaction(ctx, txOpts, f)
 }*/

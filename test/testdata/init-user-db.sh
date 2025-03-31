@@ -7,5 +7,5 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         field2 TEXT
     );
 
-    INSERT INTO MyObjTable  (id,field1,field2) values(1,5,'str');
+
 EOSQL

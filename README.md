@@ -3,6 +3,7 @@
 ## Example
 
 ### 1. Create specific repository
+Working example locates [here](test/testing_repository.go)
 ``` go
 
 package repository
@@ -10,8 +11,7 @@ package repository
 import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/breezeframework/breeze_data/breeze_data"
-	"github.com/breezeframework/breeze_data/breeze_data/pg"
+	"github.com/simpleGorm/pg"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -25,11 +25,11 @@ type MyObj struct {
 type MyRepository interface {
 	IncreaseField1(ctx context.Context, id int64) int64
 	GetByField2(ctx context.Context, url string) MyObj
-	breeze_data.CrudRepository[MyObj]
+	pg.CrudRepository[MyObj]
 }
 
 type myRepository struct {
-	breeze_data.CrudRepository[MyObj]
+	pg.CrudRepository[MyObj]
 }
 
 func (repo *myRepository) GetByField2(ctx context.Context, field2 string) MyObj {
@@ -58,9 +58,9 @@ var MyBuilders = myBuilders{
 		Set("field1", sq.Expr("field1 + 1")).Suffix("RETURNING id, field1, field2"),
 }
 
-func NewMyRepository(db breeze_data.DbClient) MyRepository {
+func NewMyRepository(db pg.DbClient) MyRepository {
 	return &myRepository{
-		breeze_data.NewPostgreSQLCRUDRepository[MyObj](
+		pg.NewPostgreSQLCRUDRepository[MyObj](
 			db,
 			MyBuilders.InsertBuilder,
 			MyBuilders.SelectBuilder,
@@ -86,6 +86,7 @@ func MyObjConverter(row pgx.Row) MyObj {
 
 ```
 ### 2. Usage
+Working test locates [here](test/repository_test.go)
 ``` go
     DSN := "connection string"
     ctx := context.Background()

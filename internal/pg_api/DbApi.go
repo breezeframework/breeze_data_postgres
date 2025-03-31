@@ -1,25 +1,11 @@
-package breeze_data
+package pg_api
 
 import (
 	"context"
 	"github.com/Masterminds/squirrel"
-	"github.com/breezeframework/breeze_data/breeze_data/transaction"
 	"github.com/jackc/pgx/v5"
+	"github.com/simpleGorm/pg/internal/transaction"
 )
-
-type DbClient interface {
-	API() DbApi
-	Close() error
-	RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f TransactionalFlow) error
-}
-
-type DbApi interface {
-	SQLExecutor
-	Transactor
-	Pinger
-
-	Close()
-}
 
 type TransactionalFlow func(ctx context.Context) error
 

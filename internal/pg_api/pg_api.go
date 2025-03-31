@@ -1,14 +1,13 @@
-package pg
+package pg_api
 
 import (
 	"context"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/breezeframework/breeze_data/breeze_data"
-	"github.com/breezeframework/breeze_data/breeze_data/prettier"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/simpleGorm/pg/internal/prettier"
 	"log"
 )
 
@@ -45,7 +44,7 @@ func (pg pg) ExecDelete(ctx context.Context, builder sq.DeleteBuilder) int64 {
 	return tag.RowsAffected()
 }
 
-func (pg *pg) ExecUpdate(ctx context.Context, builder sq.UpdateBuilder) int64 {
+func (pg pg) ExecUpdate(ctx context.Context, builder sq.UpdateBuilder) int64 {
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		panic(err)
@@ -68,7 +67,7 @@ func (pg *pg) ExecUpdate(ctx context.Context, builder sq.UpdateBuilder) int64 {
 	return tag.RowsAffected()
 }
 
-func (pg *pg) QueryContextSelect(ctx context.Context, builder sq.SelectBuilder, where map[string]interface{}) pgx.Rows {
+func (pg pg) QueryContextSelect(ctx context.Context, builder sq.SelectBuilder, where map[string]interface{}) pgx.Rows {
 	if where != nil {
 		builder.Where(where)
 	}
@@ -94,7 +93,7 @@ func (pg *pg) QueryContextSelect(ctx context.Context, builder sq.SelectBuilder, 
 	return rows
 }
 
-func (pg *pg) QueryRowContextSelect(ctx context.Context, builder sq.SelectBuilder) pgx.Row {
+func (pg pg) QueryRowContextSelect(ctx context.Context, builder sq.SelectBuilder) pgx.Row {
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		panic(err)
@@ -111,7 +110,7 @@ func (pg *pg) QueryRowContextSelect(ctx context.Context, builder sq.SelectBuilde
 	return pg.api.QueryRow(ctx, query, args...)
 }
 
-func (pg *pg) QueryRowContextInsert(ctx context.Context, builder sq.InsertBuilder) pgx.Row {
+func (pg pg) QueryRowContextInsert(ctx context.Context, builder sq.InsertBuilder) pgx.Row {
 
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
@@ -129,7 +128,7 @@ func (pg *pg) QueryRowContextInsert(ctx context.Context, builder sq.InsertBuilde
 	return pg.api.QueryRow(ctx, query, args...)
 }
 
-func (pg *pg) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) pgx.Row {
+func (pg pg) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) pgx.Row {
 	query, args, err := builder.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		panic(err)
@@ -145,13 +144,13 @@ func (pg *pg) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) pgx
 
 	return pg.api.QueryRow(ctx, query, args...)
 }
-func NewDB(dbc *pgxpool.Pool) breeze_data.DbApi {
-	return &pg{
+func NewDB(dbc *pgxpool.Pool) pg {
+	return pg{
 		api: dbc,
 	}
 }
 
-/*func (pg *pg) ScanOneContext(ctx context.Context, dest interface{}, q db.Query, args ...interface{}) error {
+/*func (pkg *pkg) ScanOneContext(ctx context.Context, dest interface{}, q db.Query, args ...interface{}) error {
 	logQuery(ctx, q, args...)
 
 	row, err := p.QueryContext(ctx, q, args...)
@@ -162,7 +161,7 @@ func NewDB(dbc *pgxpool.Pool) breeze_data.DbApi {
 	return pgxscan.ScanOne(dest, row)
 }
 
-func (pg *pg) ScanAllContext(ctx context.Context, dest interface{}, q db.Query, args ...interface{}) error {
+func (pkg *pkg) ScanAllContext(ctx context.Context, dest interface{}, q db.Query, args ...interface{}) error {
 	logQuery(ctx, q, args...)
 
 	rows, err := p.QueryContext(ctx, q, args...)
@@ -173,7 +172,7 @@ func (pg *pg) ScanAllContext(ctx context.Context, dest interface{}, q db.Query, 
 	return pgxscan.ScanAll(dest, rows)
 }*/
 
-func (pg *pg) ExecContext(ctx context.Context, q breeze_data.Query, args ...interface{}) (pgconn.CommandTag, error) {
+func (pg pg) ExecContext(ctx context.Context, q Query, args ...interface{}) (pgconn.CommandTag, error) {
 	logQuery(ctx, q, args...)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
@@ -184,7 +183,7 @@ func (pg *pg) ExecContext(ctx context.Context, q breeze_data.Query, args ...inte
 	return pg.api.Exec(ctx, q.QueryRaw, args...)
 }
 
-func (pg *pg) QueryContext(ctx context.Context, q breeze_data.Query, args ...interface{}) (pgx.Rows, error) {
+func (pg pg) QueryContext(ctx context.Context, q Query, args ...interface{}) (pgx.Rows, error) {
 	logQuery(ctx, q, args...)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
@@ -195,7 +194,7 @@ func (pg *pg) QueryContext(ctx context.Context, q breeze_data.Query, args ...int
 	return pg.api.Query(ctx, q.QueryRaw, args...)
 }
 
-func (pg *pg) QueryRowContext(ctx context.Context, q breeze_data.Query, args ...interface{}) pgx.Row {
+func (pg pg) QueryRowContext(ctx context.Context, q Query, args ...interface{}) pgx.Row {
 	logQuery(ctx, q, args...)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
@@ -206,15 +205,15 @@ func (pg *pg) QueryRowContext(ctx context.Context, q breeze_data.Query, args ...
 	return pg.api.QueryRow(ctx, q.QueryRaw, args...)
 }
 
-func (pg *pg) BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error) {
+func (pg pg) BeginTx(ctx context.Context, txOptions pgx.TxOptions) (pgx.Tx, error) {
 	return pg.api.BeginTx(ctx, txOptions)
 }
 
-func (pg *pg) Ping(ctx context.Context) error {
+func (pg pg) Ping(ctx context.Context) error {
 	return pg.api.Ping(ctx)
 }
 
-func (pg *pg) Close() {
+func (pg pg) Close() {
 	pg.api.Close()
 }
 
@@ -222,7 +221,7 @@ func MakeContextTx(ctx context.Context, tx pgx.Tx) context.Context {
 	return context.WithValue(ctx, TxKey, tx)
 }
 
-func logQuery(ctx context.Context, q breeze_data.Query, args ...interface{}) {
+func logQuery(ctx context.Context, q Query, args ...interface{}) {
 	prettyQuery := prettier.Pretty(q.QueryRaw, prettier.PlaceholderDollar, args...)
 	log.Println(
 		ctx,
