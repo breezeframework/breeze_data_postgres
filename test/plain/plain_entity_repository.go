@@ -1,4 +1,4 @@
-package plain_entity
+package plain
 
 import (
 	"context"
@@ -18,21 +18,24 @@ type TestPlainEntityRepository struct {
 	pg.Repository[TestPlainEntity]
 }
 
-const TABLE_NAME = "Test_PlainEntity_Table"
+const TABLE_NAME = "TEST_PLAIN_ENTITY_TABLE"
 
 var increaseField1Builder = sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar).
 	Set("field1", sq.Expr("field1 + 1")).Suffix("RETURNING id, field1, field2")
 
 func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
-	return TestPlainEntityRepository{
-		pg.NewPostgreRepository[TestPlainEntity](
-			db,
-			sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns("field1", "field2"),
-			sq.Select("id", "field1", "field2").PlaceholderFormat(sq.Dollar).From(TABLE_NAME),
-			sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar),
-			sq.Delete(TABLE_NAME).PlaceholderFormat(sq.Dollar),
-			testPlainEntityConverter),
+	repo, err := pg.NewPostgrePlainEntityRepository[TestPlainEntity](
+		db,
+		"",
+		sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns("field1", "field2"),
+		sq.Select("id", "field1", "field2").PlaceholderFormat(sq.Dollar).From(TABLE_NAME),
+		sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar),
+		sq.Delete(TABLE_NAME).PlaceholderFormat(sq.Dollar),
+		testPlainEntityConverter)
+	if err != nil {
+		panic(err)
 	}
+	return TestPlainEntityRepository{repo}
 }
 
 func testPlainEntityConverter(row pgx.Row) TestPlainEntity {

@@ -20,29 +20,50 @@ const (
 	Delete(ctx context.Context, id int64) int64
 	UpdateCollection(ctx context.Context, fields map[string]interface{}, where sq.Sqlizer) int64
 	Update(ctx context.Context, fields map[string]interface{}, id int64) int64
-	UpdateReturning(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) T) T
+	UpdateReturning(ctx context.Context, builder sq.UpdateBuilder, plainEntityConverter func(row pgx.Row) T) T
 }*/
 
 type Repository[T any] struct {
-	db              pg_api.PgDbClient
-	insertBuilder   sq.InsertBuilder
-	selectBuilder   sq.SelectBuilder
-	updateBuilder   sq.UpdateBuilder
-	deleteBuilder   sq.DeleteBuilder
-	entityConverter func(row pgx.Row) T
+	db                       pg_api.PgDbClient
+	tableAlias               string
+	insertBuilder            sq.InsertBuilder
+	selectBuilder            sq.SelectBuilder
+	updateBuilder            sq.UpdateBuilder
+	deleteBuilder            sq.DeleteBuilder
+	plainEntityConverter     func(row pgx.Row) T
+	oneToManyEntityConverter func(rows pgx.Rows) T
 }
 
-func NewPostgreRepository[T any](
+func NewPostgrePlainEntityRepository[T any](
 	db DbClient,
+	tableAlias string,
 	insertBuilder sq.InsertBuilder,
 	selectBuilder sq.SelectBuilder,
 	updateBuilder sq.UpdateBuilder,
 	deleteBuilder sq.DeleteBuilder,
-	entityConverter func(row pgx.Row) T) Repository[T] {
+	plainEntityConverter func(row pgx.Row) T) (Repository[T], error) {
 	return Repository[T]{
 		db:            db.(pg_api.PgDbClient),
+		tableAlias:    tableAlias,
 		insertBuilder: insertBuilder, selectBuilder: selectBuilder, updateBuilder: updateBuilder, deleteBuilder: deleteBuilder,
-		entityConverter: entityConverter}
+		plainEntityConverter: plainEntityConverter, oneToManyEntityConverter: nil,
+	}, nil
+}
+
+func NewPostgreOneToManyEntityRepository[T any](
+	db DbClient,
+	tableAlias string,
+	insertBuilder sq.InsertBuilder,
+	selectBuilder sq.SelectBuilder,
+	updateBuilder sq.UpdateBuilder,
+	deleteBuilder sq.DeleteBuilder,
+	oneToManyEntityConverter func(rows pgx.Rows) T) (Repository[T], error) {
+	return Repository[T]{
+		db:            db.(pg_api.PgDbClient),
+		tableAlias:    tableAlias,
+		insertBuilder: insertBuilder, selectBuilder: selectBuilder, updateBuilder: updateBuilder, deleteBuilder: deleteBuilder,
+		plainEntityConverter: nil, oneToManyEntityConverter: oneToManyEntityConverter,
+	}, nil
 }
 
 func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int64 {
@@ -56,16 +77,40 @@ func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int
 }
 
 func (repo Repository[T]) GetById(ctx context.Context, id int64) T {
-	builder := repo.selectBuilder.Where(sq.Eq{idColumn: id})
+	var idClouse string
+	if repo.tableAlias == "" {
+		idClouse = idColumn
+	} else {
+		idClouse = repo.tableAlias + "." + idColumn
+	}
+	builder := repo.selectBuilder.Where(sq.Eq{idClouse: id})
+	if repo.oneToManyEntityConverter == nil {
+		return repo.getPlainById(ctx, builder)
+	} else {
+		return repo.GetOneToManyById(ctx, builder)
+	}
+}
+
+func (repo Repository[T]) getPlainById(ctx context.Context, builder sq.SelectBuilder) T {
 	row := repo.db.API().QueryRowContextSelect(ctx, builder)
-	return repo.entityConverter(row)
+	return repo.plainEntityConverter(row)
+}
+
+func (repo Repository[T]) GetOneToManyById(ctx context.Context, builder sq.SelectBuilder) T {
+	rows := repo.db.API().QueryContextSelect(ctx, builder, nil)
+	return repo.oneToManyEntityConverter(rows)
 }
 
 func (repo Repository[T]) ConvertToObjects(rows pgx.Rows) []T {
 	var objs []T
 	for rows.Next() {
-		obj := repo.entityConverter(rows)
-		objs = append(objs, obj)
+		if repo.oneToManyEntityConverter == nil {
+			obj := repo.plainEntityConverter(rows)
+			objs = append(objs, obj)
+		} else {
+			obj := repo.oneToManyEntityConverter(rows)
+			objs = append(objs, obj)
+		}
 	}
 	if err := rows.Err(); err != nil {
 		panic(err)
@@ -110,7 +155,7 @@ func (repo Repository[T]) UpdateCollection(ctx context.Context, fields map[strin
 
 func (repo Repository[T]) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) T {
 	row := repo.db.API().UpdateReturning(ctx, builder)
-	return repo.entityConverter(row)
+	return repo.plainEntityConverter(row)
 }
 
 func (repo Repository[T]) UpdateReturningWithExtendedConverter(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) T) T {

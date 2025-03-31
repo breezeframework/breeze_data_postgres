@@ -1,4 +1,4 @@
-package plain_entity_test
+package plain_test
 
 import (
 	"context"
@@ -7,8 +7,9 @@ import (
 	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/closer"
 	"github.com/simpleGorm/pg/internal/transaction"
-	"github.com/simpleGorm/pg/test/plain_entity"
+	"github.com/simpleGorm/pg/test/plain"
 	"github.com/simpleGorm/pg/test/test_utils"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -23,9 +24,7 @@ func TestPlainEntityRepositoryIT(t *testing.T) {
 
 	dbClient, err := pg.NewDBClient(ctx, DSN)
 
-	if err != nil {
-		t.Fatalf("failed to connect to Postgres container: %v", err)
-	}
+	require.NoError(t, err)
 	// Define dbclient gracefull shutdown
 	closer.Add(dbClient.Close)
 	defer func() {
@@ -38,7 +37,7 @@ func TestPlainEntityRepositoryIT(t *testing.T) {
 		// Close db connection
 	}()
 
-	myRepository := plain_entity.NewTestPlainEntityRepository(dbClient)
+	myRepository := plain.NewTestPlainEntityRepository(dbClient)
 	field1_value := 10
 	field2_value := "field2_value"
 	id := myRepository.Create(ctx, field1_value, field2_value)
@@ -79,8 +78,5 @@ func TestPlainEntityRepositoryIT(t *testing.T) {
 			return nil
 		},
 	)
-	if err == nil {
-		t.Fatalf("Transaction is not rolled back")
-	}
-
+	require.Error(t, err, "Transaction is not rolled back")
 }
