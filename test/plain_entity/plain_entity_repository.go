@@ -1,4 +1,4 @@
-package testrepository
+package plain_entity
 
 import (
 	"context"
@@ -8,51 +8,51 @@ import (
 )
 
 // Mandatory declare ID field
-type TestObj struct {
+type TestPlainEntity struct {
 	ID     int64
 	Field1 int64
 	Field2 string
 }
 
-type TestObjRepository struct {
-	pg.Repository[TestObj]
+type TestPlainEntityRepository struct {
+	pg.Repository[TestPlainEntity]
 }
 
-const TABLE_NAME = "TestObjTable"
+const TABLE_NAME = "Test_PlainEntity_Table"
 
 var increaseField1Builder = sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar).
 	Set("field1", sq.Expr("field1 + 1")).Suffix("RETURNING id, field1, field2")
 
-func NewMyObjRepository(db pg.DbClient) TestObjRepository {
-	return TestObjRepository{
-		pg.NewPostgreRepository[TestObj](
+func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
+	return TestPlainEntityRepository{
+		pg.NewPostgreRepository[TestPlainEntity](
 			db,
 			sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns("field1", "field2"),
 			sq.Select("id", "field1", "field2").PlaceholderFormat(sq.Dollar).From(TABLE_NAME),
 			sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar),
 			sq.Delete(TABLE_NAME).PlaceholderFormat(sq.Dollar),
-			myObjConverter),
+			testPlainEntityConverter),
 	}
 }
 
-func myObjConverter(row pgx.Row) TestObj {
-	var myObj TestObj
+func testPlainEntityConverter(row pgx.Row) TestPlainEntity {
+	var myObj TestPlainEntity
 	if err := row.Scan(&myObj.ID, &myObj.Field1, &myObj.Field2); err != nil {
 		panic(err)
 	}
 	return myObj
 }
 
-func (repo *TestObjRepository) GetOneByField2(ctx context.Context, field2 string) TestObj {
+func (repo *TestPlainEntityRepository) GetOneByField2(ctx context.Context, field2 string) TestPlainEntity {
 	list := repo.GetBy(ctx, sq.Eq{"field2": field2})
 	if list != nil && len(list) > 0 {
 		return (list)[0]
 	}
-	var ret TestObj
+	var ret TestPlainEntity
 	return ret
 }
 
-func (repo *TestObjRepository) IncreaseField1(ctx context.Context, id int64) int64 {
+func (repo *TestPlainEntityRepository) IncreaseField1(ctx context.Context, id int64) int64 {
 	updated := repo.UpdateReturning(ctx, increaseField1Builder.Where(sq.Eq{"id": id}))
 	return updated.Field1
 }
