@@ -15,7 +15,7 @@ type ParentEntity struct {
 }
 
 type ParentEntityRepository struct {
-	pg.Repository
+	pg.Repository[ParentEntity]
 }
 
 const TABLE_NAME = "TEST_PARENT_ENTITY_TABLE "
@@ -38,11 +38,11 @@ func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
 		parentEntityConverter,
-		[]pg.IRelation{
-			OneToManyChild1Entity(db),
-			OneToManyChild2Entity(db)},
-		func(parent any) int64 {
-			return (*parent.(*interface{})).(*ParentEntity).ID
+		[]pg.IRelation[ParentEntity, any]{
+			any(OneToManyChild1EntityRelation(db)).(pg.IRelation[ParentEntity, any]),
+			any(OneToManyChild2EntityRelation(db)).(pg.IRelation[ParentEntity, any])},
+		func(parent ParentEntity) int64 {
+			return parent.ID
 		})
 	return ParentEntityRepository{repo}
 }

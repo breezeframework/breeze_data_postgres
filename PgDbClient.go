@@ -1,15 +1,16 @@
-package pg_api
+package pg
 
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
+	"github.com/simpleGorm/pg/internal/pg_api"
 	"github.com/simpleGorm/pg/internal/transaction"
 )
 
 type PgDbClient struct {
-	masterDBC          pg
-	transactionManager *PgTransactionManager
+	masterDBC          pg_api.PG
+	transactionManager *pg_api.PgTransactionManager
 }
 
 func NewPgDBClient(ctx context.Context, dsn string) (PgDbClient, error) {
@@ -19,21 +20,21 @@ func NewPgDBClient(ctx context.Context, dsn string) (PgDbClient, error) {
 	}
 
 	return PgDbClient{
-		masterDBC:          pg{api: dbc},
-		transactionManager: NewPgTransactionManager(dbc),
+		masterDBC:          pg_api.PG{dbc},
+		transactionManager: pg_api.NewPgTransactionManager(dbc),
 	}, nil
 }
 
-func (c PgDbClient) RunTransaction(ctx context.Context, txOpts transaction.TxOptions, f TransactionalFlow) error {
+func (c PgDbClient) RunTransaction(ctx context.Context, txOpts transaction.TxOptions, f pg_api.TransactionalFlow) error {
 	return c.transactionManager.Transaction(ctx, txOpts, f)
 }
 
-func (c PgDbClient) API() pg {
+func (c PgDbClient) API() pg_api.PG {
 	return c.masterDBC
 }
 
 func (c PgDbClient) Close() error {
-	if c.masterDBC.api != nil {
+	if c.masterDBC.API != nil {
 		c.masterDBC.Close()
 	}
 

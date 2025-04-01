@@ -27,7 +27,7 @@ var Child2Entity_Fields = []string{
 }
 
 type Child2EntityRepository struct {
-	pg.Repository
+	pg.Repository[Child2Entity]
 }
 
 func NewChild2EntityRepository(db pg.DbClient) Child2EntityRepository {
@@ -40,7 +40,7 @@ func NewChild2EntityRepository(db pg.DbClient) Child2EntityRepository {
 		child2EntityConverter,
 		nil,
 		func(entity any) int64 { return entity.(*Child2Entity).ID })
-	return Child2EntityRepository{repo}
+	return Child2EntityRepository{pg.ConvertRepo[Child2Entity](repo)}
 }
 
 func child2EntityConverter(row pgx.Row) any {
@@ -51,7 +51,7 @@ func child2EntityConverter(row pgx.Row) any {
 	return obj
 }
 
-func OneToManyChild2Entity(db pg.DbClient) pg.Relation[ParentEntity, Child2Entity] {
+func OneToManyChild2EntityRelation(db pg.DbClient) pg.Relation[ParentEntity, Child2Entity] {
 	return pg.Relation[ParentEntity, Child2Entity]{
 		ForeignKey: CHILD2ENTITY_PARENT_ID,
 		Repo:       NewChild2EntityRepository(db).Repository,

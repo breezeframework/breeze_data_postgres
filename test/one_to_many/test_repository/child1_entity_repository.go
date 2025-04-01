@@ -27,7 +27,7 @@ var Child1Entity_Fields = []string{
 }
 
 type Child1EntityRepository struct {
-	pg.Repository
+	pg.Repository[Child1Entity]
 }
 
 func NewChild1EntityRepository(db pg.DbClient) Child1EntityRepository {
@@ -40,7 +40,7 @@ func NewChild1EntityRepository(db pg.DbClient) Child1EntityRepository {
 		child1EntityConverter,
 		nil,
 		func(entity any) int64 { return entity.(*Child1Entity).ID })
-	return Child1EntityRepository{repo}
+	return Child1EntityRepository{pg.ConvertRepo[Child1Entity](repo)}
 }
 
 func child1EntityConverter(row pgx.Row) any {
@@ -51,12 +51,12 @@ func child1EntityConverter(row pgx.Row) any {
 	return obj
 }
 
-func OneToManyChild1Entity(db pg.DbClient) pg.Relation[ParentEntity, Child1Entity] {
+func OneToManyChild1EntityRelation(db pg.DbClient) pg.Relation[ParentEntity, Child1Entity] {
 	return pg.Relation[ParentEntity, Child1Entity]{
 		ForeignKey: CHILD1ENTITY_PARENT_ID,
 		Repo:       NewChild1EntityRepository(db).Repository,
 		ParentSetter: func(parent any, related any) {
-			p := (*parent.(*interface{})).(*ParentEntity)
+			p := parent.(*ParentEntity) // Приведение к нужному типу
 			if p.Children1 == nil {
 				p.Children1 = []any{}
 			}

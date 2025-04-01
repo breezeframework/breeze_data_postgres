@@ -7,15 +7,14 @@ import (
 	"github.com/simpleGorm/pg"
 )
 
-// Mandatory declare ID field
 type TestPlainEntity struct {
-	ID     int64
+	ID     int64 // ID field is mandatory
 	Field1 int64
 	Field2 string
 }
 
 type TestPlainEntityRepository struct {
-	pg.Repository
+	pg.Repository[TestPlainEntity]
 }
 
 const TABLE_NAME = "TEST_PLAIN_ENTITY_TABLE"
@@ -34,7 +33,7 @@ func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
 		nil,
 		func(plainEntity any) int64 { return plainEntity.(TestPlainEntity).ID })
 
-	return TestPlainEntityRepository{repo}
+	return TestPlainEntityRepository{pg.ConvertRepo[TestPlainEntity](repo)}
 }
 
 func testPlainEntityConverter(row pgx.Row) any {
