@@ -16,11 +16,7 @@ import (
 func TestPlainEntityRepositoryIT(t *testing.T) {
 
 	ctx := context.Background()
-	dbName := "users"
-	dbUser := "postgres"
-	dbPassword := "postgres"
-
-	DSN, err := test_utils.StartPostgresContainer(ctx, dbName, dbUser, dbPassword, t)
+	DSN, err := test_utils.StartPostgresContainer(ctx, t)
 
 	dbClient, err := pg.NewDBClient(ctx, DSN)
 

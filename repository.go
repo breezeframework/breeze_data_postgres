@@ -12,82 +12,102 @@ const (
 	RETURNING_ID = "RETURNING id"
 )
 
-type Repository[T any] struct {
+type IRepository interface {
+	Create(ctx context.Context, values ...interface{}) int64
+	GetById(ctx context.Context, id int64) any
+	GetAll(ctx context.Context) []any
+	GetBy(ctx context.Context, where sq.Sqlizer) []any
+	Delete(ctx context.Context, id int64) int64
+	UpdateCollection(ctx context.Context, fields map[string]interface{}, where sq.Sqlizer) int64
+	Update(ctx context.Context, fields map[string]interface{}, id int64) int64
+	UpdateReturning(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) any) any
+}
+
+type Repository struct {
 	db            pg_api.PgDbClient
-	tableAlias    string
 	insertBuilder sq.InsertBuilder
 	selectBuilder sq.SelectBuilder
 	updateBuilder sq.UpdateBuilder
 	deleteBuilder sq.DeleteBuilder
-	converter     func(row pgx.Row) T
-	relations     []relation[T]
-	getID         func(T) int64
+	converter     func(row pgx.Row) any
+	relations     []IRelation
+	idGetter      func(any) int64
 }
 
-type relation[T any] struct {
-	foreignKey  string
-	repo        Repository[any]
-	setFunc     func(*T, any)
-	getParentID func(T) int64
+type Relation[T any, R any] struct {
+	ForeignKey     string
+	Repo           Repository
+	ParentSetter   func(any, any)
+	ParentIdGetter func(R) int64
 }
 
-func (repo Repository[T]) AddRelation(
-	relatedRepo Repository[any],
-	foreignKey string,
-	setFunc func(*T, []any),
-) {
-	repo.relations = append(repo.relations, relation[T]{
-		foreignKey: foreignKey,
-		repo:       relatedRepo,
-		setFunc: func(parent *T, related any) {
-			setFunc(parent, related.([]any)) // Приводим `any` обратно в `[]R`
-		},
-	})
+func (r Relation[T, R]) getRepo() Repository {
+	return r.Repo
 }
 
-func NewRepository[T any](
+func (r Relation[T, R]) SetParent(parent any, related any) {
+	r.ParentSetter(parent, related)
+}
+
+type IRelation interface {
+	getRepo() Repository
+	GetForeignKey() string
+	SetParent(parent any, related any)
+	GetParentId(parent any) int64
+}
+
+func (r Relation[T, R]) GetForeignKey() string {
+	return r.ForeignKey
+}
+
+func (r Relation[T, R]) GetParentId(child any) int64 {
+	return r.ParentIdGetter(child.(R))
+}
+
+func NewRepository(
 	db DbClient,
-	tableAlias string,
 	insertBuilder sq.InsertBuilder,
 	selectBuilder sq.SelectBuilder,
 	updateBuilder sq.UpdateBuilder,
 	deleteBuilder sq.DeleteBuilder,
-	converter func(row pgx.Row) T) (Repository[T], error) {
-	return Repository[T]{
+	converter func(row pgx.Row) any,
+	relations []IRelation,
+	idGetter func(any) int64) Repository {
+	return Repository{
 		db:            db.(pg_api.PgDbClient),
-		tableAlias:    tableAlias,
 		insertBuilder: insertBuilder, selectBuilder: selectBuilder, updateBuilder: updateBuilder, deleteBuilder: deleteBuilder,
 		converter: converter,
-	}, nil
+		relations: relations,
+		idGetter:  idGetter}
 }
 
-func (repo *Repository[T]) loadRelations(ctx context.Context, parentEntities []T) {
+func (repo *Repository) loadRelations(ctx context.Context, parentEntities []any) {
 	if len(repo.relations) == 0 {
 		return
 	}
 	var parentIds []int64
 	for _, entity := range parentEntities {
-		parentIds = append(parentIds, repo.getID(entity))
+		parentIds = append(parentIds, repo.idGetter(entity))
 	}
 
-	parentMap := make(map[int64]*T)
+	parentMap := make(map[int64]any)
 	for i := 0; i < len(parentEntities); i++ {
-		parentMap[parentIds[i]] = &parentEntities[i]
+		parentMap[parentIds[i]] = parentEntities[i]
 	}
 
 	for _, rel := range repo.relations {
-		whereClause := sq.Eq{rel.foreignKey: parentIds}
-		relatedObjects := rel.repo.GetBy(ctx, whereClause)
+		whereClause := sq.Eq{rel.GetForeignKey(): parentIds}
+		relatedObjects := rel.getRepo().GetBy(ctx, whereClause)
 
 		for _, related := range relatedObjects {
-			if parent, ok := parentMap[rel.getParentID(related)]; ok {
-				rel.setFunc(parent, []any{related})
+			if parent, ok := parentMap[rel.GetParentId(related)]; ok {
+				rel.SetParent(parent, related)
 			}
 		}
 	}
 }
 
-func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int64 {
+func (repo Repository) Create(ctx context.Context, values ...interface{}) int64 {
 	builder := repo.insertBuilder.Suffix(RETURNING_ID).Values(values...)
 	var id int64
 	err := repo.db.API().QueryRowContextInsert(ctx, builder).Scan(&id)
@@ -97,29 +117,25 @@ func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int
 	return id
 }
 
-func (repo Repository[T]) GetById(ctx context.Context, id int64) T {
-	var idClouse string
-	if repo.tableAlias == "" {
-		idClouse = idColumn
-	} else {
-		idClouse = repo.tableAlias + "." + idColumn
-	}
-	builder := repo.selectBuilder.Where(sq.Eq{idClouse: id})
+func (repo Repository) GetById(ctx context.Context, id int64) any {
+	builder := repo.selectBuilder.Where(sq.Eq{idColumn: id})
 	obj := repo.getById(ctx, builder)
 	if len(repo.relations) > 0 {
-		repo.loadRelations(ctx, []T{obj})
+		var objs []any
+		objs = append(objs, &obj)
+		repo.loadRelations(ctx, objs)
 	}
 	return obj
 }
 
-func (repo Repository[T]) getById(ctx context.Context, builder sq.SelectBuilder) T {
+func (repo Repository) getById(ctx context.Context, builder sq.SelectBuilder) any {
 	row := repo.db.API().QueryRowContextSelect(ctx, builder)
 	obj := repo.converter(row)
 	return obj
 }
 
-func (repo Repository[T]) convertToObjects(rows pgx.Rows) []T {
-	var objs []T
+func (repo Repository) convertToObjects(rows pgx.Rows) []any {
+	var objs []any
 	for rows.Next() {
 		obj := repo.converter(rows)
 		objs = append(objs, obj)
@@ -130,23 +146,27 @@ func (repo Repository[T]) convertToObjects(rows pgx.Rows) []T {
 	return objs
 }
 
-func (repo Repository[T]) GetAll(ctx context.Context) []T {
+func (repo Repository) GetAll(ctx context.Context) []any {
 	rows := repo.db.API().QueryContextSelect(ctx, repo.selectBuilder, nil)
 	objs := repo.convertToObjects(rows)
 	if len(repo.relations) > 0 {
-		repo.loadRelations(ctx, objs)
+		var objPtrs []any
+		for i := range objs {
+			objPtrs = append(objPtrs, &objs[i])
+		}
+		repo.loadRelations(ctx, objPtrs)
 	}
 	return objs
 }
 
-func (repo Repository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
+func (repo Repository) GetBy(ctx context.Context, where sq.Sqlizer) []any {
 	builder := repo.selectBuilder.Where(where)
 	rows := repo.db.API().QueryContextSelect(ctx, builder, nil)
 	objs := repo.convertToObjects(rows)
 	return objs
 }
 
-func (repo Repository[T]) Delete(ctx context.Context, id int64) int64 {
+func (repo Repository) Delete(ctx context.Context, id int64) int64 {
 	builder := repo.deleteBuilder.Where(sq.Eq{idColumn: id})
 	return repo.db.API().ExecDelete(ctx, builder)
 }
@@ -158,22 +178,22 @@ func update(ctx context.Context, api DbApi, updateBuilder sq.UpdateBuilder, fiel
 	return api.ExecUpdate(ctx, updateBuilder)
 }
 
-func (repo Repository[T]) Update(ctx context.Context, fields map[string]interface{}, id int64) int64 {
+func (repo Repository) Update(ctx context.Context, fields map[string]interface{}, id int64) int64 {
 	builder := repo.updateBuilder.Where(sq.Eq{idColumn: id})
 	return update(ctx, repo.db.API(), builder, fields)
 }
 
-func (repo Repository[T]) UpdateCollection(ctx context.Context, fields map[string]interface{}, where sq.Sqlizer) int64 {
+func (repo Repository) UpdateCollection(ctx context.Context, fields map[string]interface{}, where sq.Sqlizer) int64 {
 	builder := repo.updateBuilder.Where(where)
 	return update(ctx, repo.db.API(), builder, fields)
 }
 
-func (repo Repository[T]) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) T {
+func (repo Repository) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) any {
 	row := repo.db.API().UpdateReturning(ctx, builder)
 	return repo.converter(row)
 }
 
-func (repo Repository[T]) UpdateReturningWithExtendedConverter(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) T) T {
+func (repo Repository) UpdateReturningWithExtendedConverter(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) any) any {
 	row := repo.db.API().UpdateReturning(ctx, builder)
 	return entityConverter(row)
 }

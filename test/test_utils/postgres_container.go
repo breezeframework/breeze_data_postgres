@@ -16,7 +16,10 @@ import (
 	"time"
 )
 
-func StartPostgresContainer(ctx context.Context, dbName string, dbUser string, dbPassword string, t *testing.T) (string, error) {
+func StartPostgresContainer(ctx context.Context, t *testing.T) (string, error) {
+	dbName := "users"
+	dbUser := "postgres"
+	dbPassword := "postgres"
 	postgresContainer, err := postgres.Run(
 		ctx,
 		"postgres:16-alpine",

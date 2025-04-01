@@ -6,20 +6,18 @@ import (
 	"fmt"
 	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/closer"
-	"github.com/simpleGorm/pg/test/one_to_many/repository"
+	"github.com/simpleGorm/pg/test/one_to_many/test_repository"
 	"github.com/simpleGorm/pg/test/test_utils"
 	"github.com/stretchr/testify/require"
 	"reflect"
+	"runtime/debug"
 	"testing"
 )
 
 func TestOneToManyEntityRepositoryIT(t *testing.T) {
 
 	ctx := context.Background()
-	dbName := "users"
-	dbUser := "postgres"
-	dbPassword := "postgres"
-	DSN, err := test_utils.StartPostgresContainer(ctx, dbName, dbUser, dbPassword, t)
+	DSN, err := test_utils.StartPostgresContainer(ctx, t)
 	dbClient, err := pg.NewDBClient(ctx, DSN)
 	require.NoError(t, err)
 	// Define dbclient gracefull shutdown
@@ -29,23 +27,25 @@ func TestOneToManyEntityRepositoryIT(t *testing.T) {
 			// handle panic errors
 			closer.CloseAll()
 			closer.Wait()
-			t.Fatalf("panic: %v", r)
+			t.Logf("panic: %v", r)
+			t.Fatalf("panic: %v", string(debug.Stack()))
 		}
 		// Close db connection
 	}()
 
-	parentRepository := repository.NewParentEntityRepository(dbClient)
-	child1Repository := repository.NewChild1EntityRepository(dbClient)
-	child2Repository := repository.NewChild2EntityRepository(dbClient)
+	parentRepository := test_repository.NewParentEntityRepository(dbClient)
+	child1Repository := test_repository.NewChild1EntityRepository(dbClient)
+	child2Repository := test_repository.NewChild2EntityRepository(dbClient)
 
 	parentId := parentRepository.Create(ctx, "PARENT")
 	child1Repository.Create(ctx, "TYPE1", parentId)
 	child1Repository.Create(ctx, "TYPE2", parentId)
 	child2Repository.Create(ctx, 0.5, parentId)
 	child2Repository.Create(ctx, 0.7, parentId)
+
 	parentEntity := parentRepository.GetById(ctx, parentId)
 
-	var expected repository.ParentEntity
+	var expected test_repository.ParentEntity
 	err = json.Unmarshal([]byte(EXPECTED), &expected)
 	require.NoError(t, err)
 	if !reflect.DeepEqual(expected, parentEntity) {
@@ -61,13 +61,9 @@ var EXPECTED = `{
 		"Name": "PARENT",
 		"Children1": [
 			{"ID": 1, "TYPE": "TYPE1"},
-			{"ID": 1, "TYPE": "TYPE1"},
-			{"ID": 2, "TYPE": "TYPE2"},
 			{"ID": 2, "TYPE": "TYPE2"}
 		],
 		"Children2": [
-			{"ID": 1, "SIZE": 0.5},
-			{"ID": 2, "SIZE": 0.7},
 			{"ID": 1, "SIZE": 0.5},
 			{"ID": 2, "SIZE": 0.7}
 		]
