@@ -21,7 +21,7 @@ type ParentEntityRepository struct {
 const TABLE_NAME = "TEST_PARENT_ENTITY_TABLE "
 
 func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
-	repo, err := pg.NewPostgreOneToManyEntityRepository[ParentEntity](
+	repo, err := pg.NewRepository[ParentEntity](
 		db,
 		"p",
 		sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns("NAME"),

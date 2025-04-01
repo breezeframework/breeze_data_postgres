@@ -18,7 +18,7 @@ type Child2EntityRepository struct {
 const CHILD2_TABLE = "TEST_CHILD2_TABLE "
 
 func NewChild2EntityRepository(db pg.DbClient) Child2EntityRepository {
-	repo, err := pg.NewPostgrePlainEntityRepository[Child2Entity](
+	repo, err := pg.NewRepository[Child2Entity](
 		db,
 		"",
 		sq.Insert(CHILD2_TABLE).PlaceholderFormat(sq.Dollar).Columns("SIZE", "PARENT_ID"),

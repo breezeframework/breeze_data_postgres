@@ -24,7 +24,7 @@ var increaseField1Builder = sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar).
 	Set("field1", sq.Expr("field1 + 1")).Suffix("RETURNING id, field1, field2")
 
 func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
-	repo, err := pg.NewPostgrePlainEntityRepository[TestPlainEntity](
+	repo, err := pg.NewRepository[TestPlainEntity](
 		db,
 		"",
 		sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns("field1", "field2"),
