@@ -60,11 +60,11 @@ var EXPECTED = `{
 		"ID": 1,
 		"Name": "PARENT",
 		"Children1": [
-			{"ID": 1, "TYPE": "TYPE1"},
-			{"ID": 2, "TYPE": "TYPE2"}
+			{"ID": 1, "TYPE": "TYPE1", "PARENT_ID": 1},
+			{"ID": 2, "TYPE": "TYPE2", "PARENT_ID": 1}
 		],
 		"Children2": [
-			{"ID": 1, "SIZE": 0.5},
-			{"ID": 2, "SIZE": 0.7}
+			{"ID": 1, "SIZE": 0.5, "PARENT_ID": 1},
+			{"ID": 2, "SIZE": 0.7, "PARENT_ID": 1}
 		]
 	}`

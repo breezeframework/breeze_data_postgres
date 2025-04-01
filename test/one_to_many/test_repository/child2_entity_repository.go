@@ -9,9 +9,9 @@ import (
 const CHILD2_TABLE = "TEST_CHILD2_TABLE "
 
 type Child2Entity struct {
-	ID        int64
-	SIZE      string
-	PARENT_ID int64
+	ID        int64  `json:"ID"`
+	SIZE      string `json:"SIZE"`
+	PARENT_ID int64  `json:"PARENT_ID"`
 }
 
 const (
@@ -53,7 +53,7 @@ func child2EntityConverter(row pgx.Row) any {
 
 func OneToManyChild2Entity(db pg.DbClient) pg.Relation[ParentEntity, Child2Entity] {
 	return pg.Relation[ParentEntity, Child2Entity]{
-		ForeignKey: "ID",
+		ForeignKey: CHILD2ENTITY_PARENT_ID,
 		Repo:       NewChild2EntityRepository(db).Repository,
 		ParentSetter: func(parent any, related any) {
 			p := (*parent.(*interface{})).(*ParentEntity)

@@ -8,10 +8,10 @@ import (
 
 // Mandatory declare ID field
 type ParentEntity struct {
-	ID        int64
-	Name      string
-	Children1 []any
-	Children2 []any
+	ID        int64  `json:"ID"`
+	Name      string `json:"Name"`
+	Children1 []any  `json:"Children1"`
+	Children2 []any  `json:"Children2"`
 }
 
 type ParentEntityRepository struct {
