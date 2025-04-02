@@ -9,9 +9,18 @@ import (
 const CHILD2_TABLE = "TEST_CHILD2_TABLE "
 
 type Child2Entity struct {
-	ID        int64  `json:"ID"`
-	SIZE      string `json:"SIZE"`
-	PARENT_ID int64  `json:"PARENT_ID"`
+	ID        int64   `json:"ID"`
+	SIZE      float64 `json:"size"`
+	PARENT_ID int64   `json:"PARENT_ID"`
+}
+
+func (child *Child2Entity) GetParentID() int64 {
+	return child.PARENT_ID
+}
+
+func (child *Child2Entity) PushToParent(parent any) {
+	par := parent.(*ParentEntity)
+	par.Children2 = append(par.Children2, child)
 }
 
 const (
@@ -38,7 +47,6 @@ func NewChild2EntityRepository(db pg.DbClient) Child2EntityRepository {
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
 		child2EntityConverter,
-		nil,
 		func(entity any) int64 { return entity.(*Child2Entity).ID })
 	return Child2EntityRepository{pg.ConvertRepo[Child2Entity](repo)}
 }
@@ -48,20 +56,13 @@ func child2EntityConverter(row pgx.Row) any {
 	if err := row.Scan(&obj.ID, &obj.SIZE, &obj.PARENT_ID); err != nil {
 		panic(err)
 	}
-	return obj
+	return &obj
 }
 
-func OneToManyChild2EntityRelation(db pg.DbClient) pg.Relation[ParentEntity, Child2Entity] {
-	return pg.Relation[ParentEntity, Child2Entity]{
+func OneToManyChild2EntityRelation(db pg.DbClient) pg.Relation[Child2Entity] {
+	return pg.Relation[Child2Entity]{
 		ForeignKey: CHILD2ENTITY_PARENT_ID,
 		Repo:       NewChild2EntityRepository(db).Repository,
-		ParentSetter: func(parent any, related any) {
-			p := (*parent.(*interface{})).(*ParentEntity)
-			if p.Children2 == nil {
-				p.Children2 = []any{}
-			}
-			p.Children2 = append(p.Children2, related)
-		},
 		ParentIdGetter: func(child Child2Entity) int64 {
 			return child.PARENT_ID
 		},

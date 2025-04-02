@@ -28,45 +28,67 @@ type Repository[T any] struct {
 	SelectBuilder sq.SelectBuilder
 	UpdateBuilder sq.UpdateBuilder
 	DeleteBuilder sq.DeleteBuilder
-	Converter     func(row pgx.Row) any
-	Relations     []IRelation[T, any]
-	IdGetter      func(any) int64
+	Converter     func(row pgx.Row) any // type is any to allow generalization
+	Relations     []Relation[any]       // the relation type is any because it really any entity
+	AddRelated    func(*T, any)
+	AddRelation   func(Relation[any])
 }
 
-type Relation[T any, R any] struct {
+func WrapRepository[R any](repo Repository[R]) Repository[any] {
+	return Repository[any]{
+		DB:            repo.DB,
+		InsertBuilder: repo.InsertBuilder,
+		SelectBuilder: repo.SelectBuilder,
+		UpdateBuilder: repo.UpdateBuilder,
+		DeleteBuilder: repo.DeleteBuilder,
+		Converter: func(row pgx.Row) any {
+			return repo.Converter(row) // Уже возвращает any, можно передавать напрямую
+		},
+		Relations: repo.Relations, // Уже []IRelation[any], копирование не нужно
+		AddRelated: func(target *any, related any) {
+			if tgt, ok := (*target).(R); ok {
+				repo.AddRelated(&tgt, related)
+				*target = any(tgt) // Обновляем значение
+			}
+		},
+		AddRelation: repo.AddRelation, // Можно передать напрямую, так как уже `Relation[any]`
+	}
+}
+
+type Identifiable interface {
+	GetID() int64
+}
+
+type Related interface {
+	GetParentID() int64
+	PushToParent(parent any)
+}
+
+type Relation[R any] struct {
 	ForeignKey     string
 	Repo           Repository[R]
-	ParentSetter   func(any, any)
 	ParentIdGetter func(R) int64
 }
 
-type IRelation[T any, R any] interface {
-	getRepo() Repository[R]
-	GetForeignKey() string
-	SetParent(parent T, related R)
-	GetParentId(parent any) int64
-}
-
-func (r Relation[T, any]) SetParent(parent T, related any) {
-	r.ParentSetter(parent, related)
-}
-
-func (r Relation[T, R]) GetParentId(child any) int64 {
-	return r.ParentIdGetter(child.(R))
-}
-
-func (r Relation[T, R]) getRepo() Repository[R] {
-	return r.Repo
-}
-
-func convertRelations[T any](relations []IRelation[any, any]) []IRelation[T, any] {
-	var result []IRelation[T, any]
-	for _, rel := range relations {
-		if typedRel, ok := rel.(IRelation[T, any]); ok {
-			result = append(result, typedRel)
-		}
+func WrapRelation[R any](r Relation[R]) Relation[any] {
+	return Relation[any]{
+		ForeignKey: r.ForeignKey,
+		Repo:       WrapRepository(r.Repo), // Приведение репозитория к `any`
+		ParentIdGetter: func(t any) int64 {
+			if val, ok := t.(R); ok {
+				return r.ParentIdGetter(val)
+			}
+			panic("cannot cast foreign key")
+		},
 	}
-	return result
+}
+
+func (r Relation[R]) GetParentId(child R) int64 {
+	return r.ParentIdGetter(child)
+}
+
+func (r Relation[R]) getRepo() Repository[R] {
+	return r.Repo
 }
 
 func ConvertRepo[T any](anyRepo Repository[any]) Repository[T] {
@@ -77,25 +99,15 @@ func ConvertRepo[T any](anyRepo Repository[any]) Repository[T] {
 		UpdateBuilder: anyRepo.UpdateBuilder,
 		DeleteBuilder: anyRepo.DeleteBuilder,
 		Converter:     anyRepo.Converter,
-		Relations:     convertRelations[T](anyRepo.Relations),
-		IdGetter:      anyRepo.IdGetter,
+		Relations:     anyRepo.Relations,
 	}
 	return convertedRepo
 }
 
-func (r Relation[T, R]) GetForeignKey() string {
+func (r Relation[R]) GetForeignKey() string {
 	return r.ForeignKey
 }
 
-func wrapFunc[T any](f func(T) int64) func(any) int64 {
-	return func(x any) int64 {
-		v, ok := x.(T) // Проверяем, что x действительно типа T
-		if !ok {
-			panic("Неверный тип аргумента")
-		}
-		return f(v)
-	}
-}
 func NewRepository[T any](
 	db DbClient,
 	insertBuilder sq.InsertBuilder,
@@ -103,14 +115,12 @@ func NewRepository[T any](
 	updateBuilder sq.UpdateBuilder,
 	deleteBuilder sq.DeleteBuilder,
 	converter func(row pgx.Row) any,
-	relations []IRelation[T, any],
 	idGetter func(T) int64) Repository[T] {
 	return Repository[T]{
 		DB:            db.Pg(),
 		InsertBuilder: insertBuilder, SelectBuilder: selectBuilder, UpdateBuilder: updateBuilder, DeleteBuilder: deleteBuilder,
 		Converter: converter,
-		Relations: relations,
-		IdGetter:  wrapFunc(idGetter)}
+	}
 }
 
 func (repo *Repository[T]) loadRelations(ctx context.Context, parentEntities []*T) {
@@ -119,10 +129,14 @@ func (repo *Repository[T]) loadRelations(ctx context.Context, parentEntities []*
 	}
 	var parentIds []int64
 	for _, entity := range parentEntities {
-		parentIds = append(parentIds, repo.IdGetter(entity))
+		var ident Identifiable
+		if v, ok := any(*entity).(Identifiable); ok { // Используем any для приведения к интерфейсу
+			ident = v
+			parentIds = append(parentIds, ident.GetID())
+		}
 	}
 
-	parentMap := make(map[int64]any)
+	parentMap := make(map[int64]*T)
 	for i := 0; i < len(parentEntities); i++ {
 		parentMap[parentIds[i]] = parentEntities[i]
 	}
@@ -132,8 +146,12 @@ func (repo *Repository[T]) loadRelations(ctx context.Context, parentEntities []*
 		relatedObjects := rel.getRepo().GetBy(ctx, whereClause)
 
 		for _, related := range relatedObjects {
-			if parent, ok := parentMap[rel.GetParentId(related.(T))]; ok {
-				rel.SetParent(parent.(T), related.(any))
+			var parentId int64
+			if rel, ok := any(related).(Related); ok {
+				parentId = rel.GetParentID()
+				if parent, ok := parentMap[parentId]; ok {
+					rel.PushToParent(parent)
+				}
 			}
 		}
 	}
@@ -154,16 +172,16 @@ func (repo Repository[T]) GetById(ctx context.Context, id int64) T {
 	obj := repo.getById(ctx, builder)
 	if len(repo.Relations) > 0 {
 		var objs []*T
-		objs = append(objs, &obj)
+		objs = append(objs, obj)
 		repo.loadRelations(ctx, objs)
 	}
-	return obj
+	return *obj
 }
 
-func (repo Repository[T]) getById(ctx context.Context, builder sq.SelectBuilder) T {
+func (repo Repository[T]) getById(ctx context.Context, builder sq.SelectBuilder) *T {
 	row := repo.DB.API().QueryRowContextSelect(ctx, builder)
 	obj := repo.Converter(row)
-	return obj.(T)
+	return obj.(*T)
 }
 
 func (repo Repository[T]) convertToObjects(rows pgx.Rows) []T {

@@ -30,18 +30,17 @@ func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
 		sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar),
 		sq.Delete(TABLE_NAME).PlaceholderFormat(sq.Dollar),
 		testPlainEntityConverter,
-		nil,
 		func(plainEntity any) int64 { return plainEntity.(TestPlainEntity).ID })
 
 	return TestPlainEntityRepository{pg.ConvertRepo[TestPlainEntity](repo)}
 }
 
 func testPlainEntityConverter(row pgx.Row) any {
-	var myObj TestPlainEntity
-	if err := row.Scan(&myObj.ID, &myObj.Field1, &myObj.Field2); err != nil {
+	var entity TestPlainEntity
+	if err := row.Scan(&entity.ID, &entity.Field1, &entity.Field2); err != nil {
 		panic(err)
 	}
-	return myObj
+	return &entity
 }
 
 func (repo *TestPlainEntityRepository) GetOneByField2(ctx context.Context, field2 string) any {
@@ -55,5 +54,5 @@ func (repo *TestPlainEntityRepository) GetOneByField2(ctx context.Context, field
 
 func (repo *TestPlainEntityRepository) IncreaseField1(ctx context.Context, id int64) int64 {
 	updated := repo.UpdateReturning(ctx, increaseField1Builder.Where(sq.Eq{"id": id}))
-	return updated.(TestPlainEntity).Field1
+	return updated.(*TestPlainEntity).Field1
 }

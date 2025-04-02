@@ -14,6 +14,15 @@ type Child1Entity struct {
 	PARENT_ID int64  `json:"PARENT_ID"`
 }
 
+func (child *Child1Entity) GetParentID() int64 {
+	return child.PARENT_ID
+}
+
+func (child *Child1Entity) PushToParent(parent any) {
+	par := parent.(*ParentEntity)
+	par.Children1 = append(par.Children1, child)
+}
+
 const (
 	CHILD1ENTITY_ID        = "ID"
 	CHILD1ENTITY_TYPE      = "TYPE"
@@ -38,7 +47,6 @@ func NewChild1EntityRepository(db pg.DbClient) Child1EntityRepository {
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
 		child1EntityConverter,
-		nil,
 		func(entity any) int64 { return entity.(*Child1Entity).ID })
 	return Child1EntityRepository{pg.ConvertRepo[Child1Entity](repo)}
 }
@@ -48,20 +56,13 @@ func child1EntityConverter(row pgx.Row) any {
 	if err := row.Scan(&obj.ID, &obj.TYPE, &obj.PARENT_ID); err != nil {
 		panic(err)
 	}
-	return obj
+	return &obj
 }
 
-func OneToManyChild1EntityRelation(db pg.DbClient) pg.Relation[ParentEntity, Child1Entity] {
-	return pg.Relation[ParentEntity, Child1Entity]{
+func OneToManyChild1EntityRelation(db pg.DbClient) pg.Relation[Child1Entity] {
+	return pg.Relation[Child1Entity]{
 		ForeignKey: CHILD1ENTITY_PARENT_ID,
 		Repo:       NewChild1EntityRepository(db).Repository,
-		ParentSetter: func(parent any, related any) {
-			p := parent.(*ParentEntity) // Приведение к нужному типу
-			if p.Children1 == nil {
-				p.Children1 = []any{}
-			}
-			p.Children1 = append(p.Children1, related)
-		},
 		ParentIdGetter: func(child Child1Entity) int64 {
 			return child.PARENT_ID
 		},

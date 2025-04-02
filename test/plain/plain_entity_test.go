@@ -10,6 +10,7 @@ import (
 	"github.com/simpleGorm/pg/test/plain"
 	"github.com/simpleGorm/pg/test/test_utils"
 	"github.com/stretchr/testify/require"
+	"runtime/debug"
 	"testing"
 )
 
@@ -19,16 +20,18 @@ func TestPlainEntityRepositoryIT(t *testing.T) {
 	DSN, err := test_utils.StartPostgresContainer(ctx, t)
 
 	dbClient, err := pg.NewDBClient(ctx, DSN)
-
 	require.NoError(t, err)
-	// Define dbclient gracefull shutdown
 	closer.Add(dbClient.Close)
+	// Define dbclient gracefull shutdown
 	defer func() {
 		if r := recover(); r != nil {
 			// handle panic errors
+			t.Logf("panic: %v", r)
+			t.Fatalf("panic: %v", string(debug.Stack()))
 			closer.CloseAll()
 			closer.Wait()
-			t.Fatalf("panic: %v", r)
+		} else {
+			closer.CloseAll()
 		}
 		// Close db connection
 	}()

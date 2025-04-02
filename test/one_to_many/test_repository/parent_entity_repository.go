@@ -14,6 +14,14 @@ type ParentEntity struct {
 	Children2 []any  `json:"Children2"`
 }
 
+func (p ParentEntity) GetID() int64 {
+	return p.ID
+}
+
+func (parent *ParentEntity) AddRelatedEntity(related any) {
+	parent.Children1 = append(parent.Children1, related)
+}
+
 type ParentEntityRepository struct {
 	pg.Repository[ParentEntity]
 }
@@ -38,12 +46,12 @@ func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
 		parentEntityConverter,
-		[]pg.IRelation[ParentEntity, any]{
-			any(OneToManyChild1EntityRelation(db)).(pg.IRelation[ParentEntity, any]),
-			any(OneToManyChild2EntityRelation(db)).(pg.IRelation[ParentEntity, any])},
 		func(parent ParentEntity) int64 {
 			return parent.ID
 		})
+	child1Rel := pg.WrapRelation(OneToManyChild1EntityRelation(db))
+	child2Rel := pg.WrapRelation(OneToManyChild2EntityRelation(db))
+	repo.Relations = append(repo.Relations, child1Rel, child2Rel)
 	return ParentEntityRepository{repo}
 }
 

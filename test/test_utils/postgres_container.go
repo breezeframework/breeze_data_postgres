@@ -9,8 +9,6 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"io"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -36,8 +34,8 @@ func StartPostgresContainer(ctx context.Context, t *testing.T) (string, error) {
 	)
 	require.NoError(t, err)
 
-	logs, _ := postgresContainer.Logs(ctx)
-	_, err = io.Copy(os.Stdout, logs)
+	//logs, _ := postgresContainer.Logs(ctx)
+	//_, err = io.Copy(os.Stdout, logs)
 
 	require.NoError(t, err)
 
