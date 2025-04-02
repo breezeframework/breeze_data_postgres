@@ -27,7 +27,7 @@ var Child1Entity_Fields = []string{
 }
 
 type Child1EntityRepository struct {
-	pg.Repository[Child1Entity]
+	pg.Repository[Child1Entity, any]
 }
 
 func NewChild1EntityRepository(db pg.DbClient) Child1EntityRepository {
@@ -40,7 +40,7 @@ func NewChild1EntityRepository(db pg.DbClient) Child1EntityRepository {
 		child1EntityConverter,
 		nil,
 		func(entity any) int64 { return entity.(*Child1Entity).ID })
-	return Child1EntityRepository{pg.ConvertRepo[Child1Entity](repo)}
+	return Child1EntityRepository{repo}
 }
 
 func child1EntityConverter(row pgx.Row) any {

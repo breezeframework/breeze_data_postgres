@@ -1,4 +1,4 @@
-package oneToMany_entity_repository_test
+package one_to_many
 
 import (
 	"context"

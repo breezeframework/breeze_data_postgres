@@ -27,7 +27,7 @@ var Child2Entity_Fields = []string{
 }
 
 type Child2EntityRepository struct {
-	pg.Repository[Child2Entity]
+	pg.Repository[Child2Entity, any]
 }
 
 func NewChild2EntityRepository(db pg.DbClient) Child2EntityRepository {

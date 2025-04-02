@@ -15,7 +15,7 @@ type ParentEntity struct {
 }
 
 type ParentEntityRepository struct {
-	pg.Repository[ParentEntity]
+	pg.Repository[ParentEntity, any]
 }
 
 const TABLE_NAME = "TEST_PARENT_ENTITY_TABLE "
