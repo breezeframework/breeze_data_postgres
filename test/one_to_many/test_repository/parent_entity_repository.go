@@ -6,9 +6,10 @@ import (
 	"github.com/simpleGorm/pg"
 )
 
-// Mandatory declare ID field
+const TABLE_NAME = "TEST_PARENT_ENTITY_TABLE "
+
 type ParentEntity struct {
-	ID        int64  `json:"ID"`
+	ID        int64  `json:"ID"` // ID field is mandatory
 	Name      string `json:"Name"`
 	Children1 []any  `json:"Children1"`
 	Children2 []any  `json:"Children2"`
@@ -25,8 +26,6 @@ func (parent *ParentEntity) AddRelatedEntity(related any) {
 type ParentEntityRepository struct {
 	pg.Repository[ParentEntity]
 }
-
-const TABLE_NAME = "TEST_PARENT_ENTITY_TABLE "
 
 var (
 	ParentEntity_id   = "id"

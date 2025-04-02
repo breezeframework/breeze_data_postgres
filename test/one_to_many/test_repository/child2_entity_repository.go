@@ -9,7 +9,7 @@ import (
 const CHILD2_TABLE = "TEST_CHILD2_TABLE "
 
 type Child2Entity struct {
-	ID        int64   `json:"ID"`
+	ID        int64   `json:"ID"` // ID field is mandatory
 	SIZE      float64 `json:"size"`
 	PARENT_ID int64   `json:"PARENT_ID"`
 }

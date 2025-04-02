@@ -9,7 +9,7 @@ import (
 const CHILD1_TABLE = "TEST_CHILD1_TABLE "
 
 type Child1Entity struct {
-	ID        int64  `json:"ID"`
+	ID        int64  `json:"ID"` // ID field is mandatory
 	TYPE      string `json:"type"`
 	PARENT_ID int64  `json:"PARENT_ID"`
 }

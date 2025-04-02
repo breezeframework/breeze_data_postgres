@@ -13,20 +13,40 @@ type TestPlainEntity struct {
 	Field2 string
 }
 
+func (p TestPlainEntity) GetID() int64 {
+	return p.ID
+}
+
+func (parent *TestPlainEntity) AddRelatedEntity(related any) {
+
+}
+
 type TestPlainEntityRepository struct {
 	pg.Repository[TestPlainEntity]
 }
 
 const TABLE_NAME = "TEST_PLAIN_ENTITY_TABLE"
 
+var (
+	Entity_id     = "id"
+	Entity_field1 = "field1"
+	Entity_field2 = "field2"
+)
+
+var Entity_Fields = []string{
+	Entity_id,
+	Entity_field1,
+	Entity_field2,
+}
+
 var increaseField1Builder = sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar).
-	Set("field1", sq.Expr("field1 + 1")).Suffix("RETURNING id, field1, field2")
+	Set(Entity_field1, sq.Expr(Entity_field1+"+ 1")).Suffix("RETURNING " + Entity_id + ", " + Entity_field1 + "" + ", " + Entity_field2)
 
 func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
 	repo := pg.NewRepository(
 		db,
-		sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns("field1", "field2"),
-		sq.Select("id", "field1", "field2").PlaceholderFormat(sq.Dollar).From(TABLE_NAME),
+		sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns(Entity_field1, Entity_field2),
+		sq.Select(Entity_Fields...).PlaceholderFormat(sq.Dollar).From(TABLE_NAME),
 		sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar),
 		sq.Delete(TABLE_NAME).PlaceholderFormat(sq.Dollar),
 		testPlainEntityConverter,
@@ -44,7 +64,7 @@ func testPlainEntityConverter(row pgx.Row) any {
 }
 
 func (repo *TestPlainEntityRepository) GetOneByField2(ctx context.Context, field2 string) any {
-	list := repo.GetBy(ctx, sq.Eq{"field2": field2})
+	list := repo.GetBy(ctx, sq.Eq{Entity_field2: field2})
 	if list != nil && len(list) > 0 {
 		return (list)[0]
 	}
@@ -53,6 +73,6 @@ func (repo *TestPlainEntityRepository) GetOneByField2(ctx context.Context, field
 }
 
 func (repo *TestPlainEntityRepository) IncreaseField1(ctx context.Context, id int64) int64 {
-	updated := repo.UpdateReturning(ctx, increaseField1Builder.Where(sq.Eq{"id": id}))
+	updated := repo.UpdateReturning(ctx, increaseField1Builder.Where(sq.Eq{Entity_id: id}))
 	return updated.(*TestPlainEntity).Field1
 }
