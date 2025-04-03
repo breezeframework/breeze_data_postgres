@@ -189,7 +189,7 @@ func (repo Repository[T]) convertToObjects(rows pgx.Rows) []T {
 	for rows.Next() {
 		obj := repo.Converter(rows)
 		if t, ok := obj.(*T); ok {
-			objs = append(objs, *t) // Применяем указатель на T
+			objs = append(objs, *t)
 		} else {
 			objs = append(objs, obj.(T))
 		}
