@@ -3,18 +3,22 @@ package oneToMany_entity_repository_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/closer"
+	"github.com/simpleGorm/pg/pkg/logger"
 	"github.com/simpleGorm/pg/test/one_to_many/test_repository"
 	"github.com/simpleGorm/pg/test/test_utils"
 	"github.com/stretchr/testify/require"
+	"log/slog"
+	"os"
 	"runtime/debug"
 	"testing"
 )
 
-func TestOneToManyEntityRepositoryIT(t *testing.T) {
-
+func TestOneToMany(t *testing.T) {
+	logger.SetLogger(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelError,
+	})))
 	ctx := context.Background()
 	DSN, err := test_utils.StartPostgresContainer(ctx, t)
 	dbClient, err := pg.NewDBClient(ctx, DSN)
@@ -49,7 +53,7 @@ func TestOneToManyEntityRepositoryIT(t *testing.T) {
 	marshalled, err := json.Marshal(&parentEntity)
 	require.NoError(t, err)
 	actual := string(marshalled)
-	fmt.Println(actual)
+	logger.Logger().Info(actual)
 
 	if EXPECTED != actual {
 		t.Errorf("\nExpected:\n%v\nGot:\n%v", EXPECTED, actual)

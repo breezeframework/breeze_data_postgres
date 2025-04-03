@@ -7,14 +7,20 @@ import (
 	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/closer"
 	"github.com/simpleGorm/pg/internal/transaction"
+	"github.com/simpleGorm/pg/pkg/logger"
 	"github.com/simpleGorm/pg/test/plain"
 	"github.com/simpleGorm/pg/test/test_utils"
 	"github.com/stretchr/testify/require"
+	"log/slog"
+	"os"
 	"runtime/debug"
 	"testing"
 )
 
-func TestPlainEntityRepositoryIT(t *testing.T) {
+func TestPlain(t *testing.T) {
+
+	logger.SetLogger(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelError})))
 
 	ctx := context.Background()
 	DSN, err := test_utils.StartPostgresContainer(ctx, t)

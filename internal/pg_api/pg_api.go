@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/simpleGorm/pg/internal/prettier"
+	"github.com/simpleGorm/pg/pkg/logger"
 	"log"
 )
 
@@ -76,10 +77,10 @@ func (pg PG) QueryContextSelect(ctx context.Context, builder sq.SelectBuilder, w
 		panic(err)
 	}
 
-	fmt.Println("Generated SQL query:", query)
-	fmt.Println("Arguments:", args)
-	fmt.Println("ctx:", ctx)
-	fmt.Println("ctx.Value(TxKey):", ctx.Value(TxKey))
+	logger.Logger().Info("Generated SQL query:", query)
+	logger.Logger().Info("Arguments:", args)
+	logger.Logger().Info("ctx:", ctx)
+	logger.Logger().Info("ctx.Value(TxKey):", ctx.Value(TxKey))
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	var rows pgx.Rows
 	if ok {
@@ -99,8 +100,8 @@ func (pg PG) QueryRowContextSelect(ctx context.Context, builder sq.SelectBuilder
 		panic(err)
 	}
 
-	fmt.Println("Generated SQL query:", query)
-	fmt.Println("Arguments:", args)
+	logger.Logger().Info("Generated SQL query:", query)
+	logger.Logger().Info("Arguments:", args)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
@@ -117,8 +118,8 @@ func (pg PG) QueryRowContextInsert(ctx context.Context, builder sq.InsertBuilder
 		panic(err)
 	}
 
-	fmt.Println("Generated SQL query:", query)
-	fmt.Println("Arguments:", args)
+	logger.Logger().Info("Generated SQL query:", query)
+	logger.Logger().Info("Arguments:", args)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
@@ -134,8 +135,8 @@ func (pg PG) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) pgx.
 		panic(err)
 	}
 
-	fmt.Println("Generated SQL query:", query)
-	fmt.Println("Arguments:", args)
+	logger.Logger().Info("Generated SQL query:", query)
+	logger.Logger().Info("Arguments:", args)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
