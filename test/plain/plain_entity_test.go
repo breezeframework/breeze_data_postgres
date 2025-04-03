@@ -32,10 +32,10 @@ func TestPlain(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			// handle panic errors
-			t.Logf("panic: %v", r)
+			logger.Logger().Error("panic: %v", r)
 			t.Fatalf("panic: %v", string(debug.Stack()))
-			closer.CloseAll()
-			closer.Wait()
+			//closer.CloseAll()
+			//closer.Wait()
 		} else {
 			closer.CloseAll()
 		}
@@ -73,8 +73,8 @@ func TestPlain(t *testing.T) {
 		func(ctx context.Context) error {
 			id1 := myRepository.Create(ctx, 2, "field2_value_2")
 			id2 := myRepository.Create(ctx, 3, "field2_value_3")
-			t.Logf("id1: %d", id1)
-			t.Logf("id2: %d", id2)
+			logger.Logger().Info("", slog.Int64("id1", id1))
+			logger.Logger().Info("", slog.Int64("id2", id2))
 			if id1 != id2 {
 				// Rollback
 				return errors.Wrap(errors.New("Test error"), "Error condition achieved")

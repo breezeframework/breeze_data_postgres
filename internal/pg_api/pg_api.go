@@ -2,7 +2,6 @@ package pg_api
 
 import (
 	"context"
-	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -51,9 +50,9 @@ func (pg PG) ExecUpdate(ctx context.Context, builder sq.UpdateBuilder) int64 {
 		panic(err)
 	}
 
-	log.Printf("[ExecUpdate] query: %s", query)
-	log.Printf("[ExecUpdate] args: %+v", args)
-	log.Printf("[ExecUpdate] err: %+v", err)
+	logger.Logger().Info("[ExecUpdate] query: %s", query)
+	logger.Logger().Info("[ExecUpdate] args: %+v", args)
+	logger.Logger().Info("[ExecUpdate] err: %+v", err)
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	var tag pgconn.CommandTag
 	if ok {
@@ -62,7 +61,6 @@ func (pg PG) ExecUpdate(ctx context.Context, builder sq.UpdateBuilder) int64 {
 		tag, err = pg.API.Exec(ctx, query, args...)
 	}
 	if err != nil {
-		log.Printf("err: %+v", err)
 		log.Panic(err)
 	}
 	return tag.RowsAffected()
@@ -169,7 +167,7 @@ func (pkg *pkg) ScanAllContext(ctx context.Context, dest interface{}, q db.Query
 }*/
 
 func (pg PG) ExecContext(ctx context.Context, q Query, args ...interface{}) (pgconn.CommandTag, error) {
-	logQuery(ctx, q, args...)
+	logQuery(q, args...)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
@@ -180,7 +178,7 @@ func (pg PG) ExecContext(ctx context.Context, q Query, args ...interface{}) (pgc
 }
 
 func (pg PG) QueryContext(ctx context.Context, q Query, args ...interface{}) (pgx.Rows, error) {
-	logQuery(ctx, q, args...)
+	logQuery(q, args...)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
@@ -191,7 +189,7 @@ func (pg PG) QueryContext(ctx context.Context, q Query, args ...interface{}) (pg
 }
 
 func (pg PG) QueryRowContext(ctx context.Context, q Query, args ...interface{}) pgx.Row {
-	logQuery(ctx, q, args...)
+	logQuery(q, args...)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
@@ -217,11 +215,9 @@ func MakeContextTx(ctx context.Context, tx pgx.Tx) context.Context {
 	return context.WithValue(ctx, TxKey, tx)
 }
 
-func logQuery(ctx context.Context, q Query, args ...interface{}) {
+func logQuery(q Query, args ...interface{}) {
 	prettyQuery := prettier.Pretty(q.QueryRaw, prettier.PlaceholderDollar, args...)
-	log.Println(
-		ctx,
-		fmt.Sprintf("sql: %s", q.Name),
-		fmt.Sprintf("query: %s", prettyQuery),
-	)
+	logger.Logger().Info("sql: %s", q.Name)
+	logger.Logger().Info("query: %s", prettyQuery)
+
 }
