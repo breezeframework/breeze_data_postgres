@@ -7,24 +7,6 @@ import (
 	"github.com/simpleGorm/pg"
 )
 
-type TestPlainEntity struct {
-	ID     int64 // ID field is mandatory
-	Field1 int64
-	Field2 string
-}
-
-func (p TestPlainEntity) GetID() int64 {
-	return p.ID
-}
-
-func (parent *TestPlainEntity) AddRelatedEntity(related any) {
-
-}
-
-type TestPlainEntityRepository struct {
-	pg.Repository[TestPlainEntity]
-}
-
 const TABLE_NAME = "TEST_PLAIN_ENTITY_TABLE"
 
 var (
@@ -39,20 +21,34 @@ var Entity_Fields = []string{
 	Entity_field2,
 }
 
+type TestPlainEntity struct {
+	ID     int64 // ID field is mandatory
+	Field1 int64
+	Field2 string
+}
+
+func (p TestPlainEntity) GetID() int64 {
+	return p.ID
+}
+
+type TestPlainEntityRepository struct {
+	pg.Repository[TestPlainEntity]
+}
+
 var increaseField1Builder = sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar).
 	Set(Entity_field1, sq.Expr(Entity_field1+"+ 1")).Suffix("RETURNING " + Entity_id + ", " + Entity_field1 + "" + ", " + Entity_field2)
 
 func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
 	repo := pg.NewRepository(
+		TestPlainEntity{},
 		db,
 		sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns(Entity_field1, Entity_field2),
 		sq.Select(Entity_Fields...).PlaceholderFormat(sq.Dollar).From(TABLE_NAME),
 		sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar),
 		sq.Delete(TABLE_NAME).PlaceholderFormat(sq.Dollar),
-		testPlainEntityConverter,
-		func(plainEntity any) int64 { return plainEntity.(TestPlainEntity).ID })
+		testPlainEntityConverter)
 
-	return TestPlainEntityRepository{pg.ConvertRepo[TestPlainEntity](repo)}
+	return TestPlainEntityRepository{repo}
 }
 
 func testPlainEntityConverter(row pgx.Row) any {

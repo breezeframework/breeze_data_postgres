@@ -41,14 +41,14 @@ type Child1EntityRepository struct {
 
 func NewChild1EntityRepository(db pg.DbClient) Child1EntityRepository {
 	repo := pg.NewRepository(
+		Child1Entity{},
 		db,
 		sq.Insert(CHILD1_TABLE).PlaceholderFormat(sq.Dollar).Columns(CHILD1ENTITY_TYPE, CHILD1ENTITY_PARENT_ID),
 		sq.Select(Child1Entity_Fields...).From(CHILD1_TABLE),
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
-		child1EntityConverter,
-		func(entity any) int64 { return entity.(*Child1Entity).ID })
-	return Child1EntityRepository{pg.ConvertRepo[Child1Entity](repo)}
+		child1EntityConverter)
+	return Child1EntityRepository{repo}
 }
 
 func child1EntityConverter(row pgx.Row) any {

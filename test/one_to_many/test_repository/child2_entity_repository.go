@@ -8,6 +8,18 @@ import (
 
 const CHILD2_TABLE = "TEST_CHILD2_TABLE "
 
+const (
+	CHILD2ENTITY_ID        = "ID"
+	CHILD2ENTITY_SIZE      = "SIZE"
+	CHILD2ENTITY_PARENT_ID = "PARENT_ID"
+)
+
+var Child2Entity_Fields = []string{
+	CHILD2ENTITY_ID,
+	CHILD2ENTITY_SIZE,
+	CHILD2ENTITY_PARENT_ID,
+}
+
 type Child2Entity struct {
 	ID        int64   `json:"ID"` // ID field is mandatory
 	SIZE      float64 `json:"size"`
@@ -23,32 +35,20 @@ func (child *Child2Entity) PushToParent(parent any) {
 	par.Children2 = append(par.Children2, child)
 }
 
-const (
-	CHILD2ENTITY_ID        = "ID"
-	CHILD2ENTITY_SIZE      = "SIZE"
-	CHILD2ENTITY_PARENT_ID = "PARENT_ID"
-)
-
-var Child2Entity_Fields = []string{
-	CHILD2ENTITY_ID,
-	CHILD2ENTITY_SIZE,
-	CHILD2ENTITY_PARENT_ID,
-}
-
 type Child2EntityRepository struct {
 	pg.Repository[Child2Entity]
 }
 
 func NewChild2EntityRepository(db pg.DbClient) Child2EntityRepository {
 	repo := pg.NewRepository(
+		Child2Entity{},
 		db,
 		sq.Insert(CHILD2_TABLE).PlaceholderFormat(sq.Dollar).Columns(CHILD2ENTITY_SIZE, CHILD2ENTITY_PARENT_ID),
 		sq.Select(Child2Entity_Fields...).From(CHILD2_TABLE),
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
-		child2EntityConverter,
-		func(entity any) int64 { return entity.(*Child2Entity).ID })
-	return Child2EntityRepository{pg.ConvertRepo[Child2Entity](repo)}
+		child2EntityConverter)
+	return Child2EntityRepository{repo}
 }
 
 func child2EntityConverter(row pgx.Row) any {

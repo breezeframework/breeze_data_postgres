@@ -23,6 +23,7 @@ type IRepository interface {
 }
 
 type Repository[T any] struct {
+	anchor        T
 	DB            PgDbClient
 	InsertBuilder sq.InsertBuilder
 	SelectBuilder sq.SelectBuilder
@@ -36,6 +37,7 @@ type Repository[T any] struct {
 
 func WrapRepository[R any](repo Repository[R]) Repository[any] {
 	return Repository[any]{
+		anchor:        repo.anchor,
 		DB:            repo.DB,
 		InsertBuilder: repo.InsertBuilder,
 		SelectBuilder: repo.SelectBuilder,
@@ -91,32 +93,20 @@ func (r Relation[R]) getRepo() Repository[R] {
 	return r.Repo
 }
 
-func ConvertRepo[T any](anyRepo Repository[any]) Repository[T] {
-	convertedRepo := Repository[T]{
-		DB:            anyRepo.DB,
-		InsertBuilder: anyRepo.InsertBuilder,
-		SelectBuilder: anyRepo.SelectBuilder,
-		UpdateBuilder: anyRepo.UpdateBuilder,
-		DeleteBuilder: anyRepo.DeleteBuilder,
-		Converter:     anyRepo.Converter,
-		Relations:     anyRepo.Relations,
-	}
-	return convertedRepo
-}
-
 func (r Relation[R]) GetForeignKey() string {
 	return r.ForeignKey
 }
 
 func NewRepository[T any](
+	anchor T,
 	db DbClient,
 	insertBuilder sq.InsertBuilder,
 	selectBuilder sq.SelectBuilder,
 	updateBuilder sq.UpdateBuilder,
 	deleteBuilder sq.DeleteBuilder,
-	converter func(row pgx.Row) any,
-	idGetter func(T) int64) Repository[T] {
+	converter func(row pgx.Row) any) Repository[T] {
 	return Repository[T]{
+		anchor:        anchor,
 		DB:            db.Pg(),
 		InsertBuilder: insertBuilder, SelectBuilder: selectBuilder, UpdateBuilder: updateBuilder, DeleteBuilder: deleteBuilder,
 		Converter: converter,

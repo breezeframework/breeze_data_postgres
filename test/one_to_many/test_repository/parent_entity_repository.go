@@ -8,25 +8,6 @@ import (
 
 const TABLE_NAME = "TEST_PARENT_ENTITY_TABLE "
 
-type ParentEntity struct {
-	ID        int64  `json:"ID"` // ID field is mandatory
-	Name      string `json:"Name"`
-	Children1 []any  `json:"Children1"`
-	Children2 []any  `json:"Children2"`
-}
-
-func (p ParentEntity) GetID() int64 {
-	return p.ID
-}
-
-func (parent *ParentEntity) AddRelatedEntity(related any) {
-	parent.Children1 = append(parent.Children1, related)
-}
-
-type ParentEntityRepository struct {
-	pg.Repository[ParentEntity]
-}
-
 var (
 	ParentEntity_id   = "id"
 	ParentEntity_name = "name"
@@ -37,17 +18,34 @@ var ParentEntity_Fields = []string{
 	ParentEntity_name,
 }
 
+type ParentEntity struct {
+	ID        int64  `json:"ID"` // ID field is mandatory
+	Name      string `json:"Name"`
+	Children1 []any  `json:"Children1"`
+	Children2 []any  `json:"Children2"`
+}
+
+type ParentEntityRepository struct {
+	pg.Repository[ParentEntity]
+}
+
+func (parent ParentEntity) GetID() int64 {
+	return parent.ID
+}
+
+func (parent *ParentEntity) AddRelatedEntity(related any) {
+	parent.Children1 = append(parent.Children1, related)
+}
+
 func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
 	repo := pg.NewRepository(
+		ParentEntity{},
 		db,
 		sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns(ParentEntity_name),
 		sq.Select(ParentEntity_Fields...).PlaceholderFormat(sq.Dollar).From(TABLE_NAME),
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
-		parentEntityConverter,
-		func(parent ParentEntity) int64 {
-			return parent.ID
-		})
+		parentEntityConverter)
 	child1Rel := pg.WrapRelation(OneToManyChild1EntityRelation(db))
 	child2Rel := pg.WrapRelation(OneToManyChild2EntityRelation(db))
 	repo.Relations = append(repo.Relations, child1Rel, child2Rel)
