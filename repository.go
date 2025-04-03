@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 )
@@ -188,7 +189,14 @@ func (repo Repository[T]) convertToObjects(rows pgx.Rows) []T {
 	var objs []T
 	for rows.Next() {
 		obj := repo.Converter(rows)
-		objs = append(objs, obj.(T))
+		if t, ok := obj.(*T); ok {
+			objs = append(objs, *t) // Применяем указатель на T
+
+		} else {
+			fmt.Println("Ошибка приведения типа")
+
+			objs = append(objs, obj.(T))
+		}
 	}
 	if err := rows.Err(); err != nil {
 		panic(err)
