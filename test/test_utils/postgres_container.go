@@ -5,12 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/simpleGorm/pg/pkg/logger"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"io"
-	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -36,15 +35,15 @@ func StartPostgresContainer(ctx context.Context, t *testing.T) (string, error) {
 	)
 	require.NoError(t, err)
 
-	logs, _ := postgresContainer.Logs(ctx)
-	_, err = io.Copy(os.Stdout, logs)
+	//logs, _ := postgresContainer.Logs(ctx)
+	//_, err = io.Copy(os.Stdout, logs)
 
 	require.NoError(t, err)
 
 	conf, err := postgresContainer.Inspect(ctx)
 	require.NoError(t, err)
 
-	t.Logf("Postgres container id: %s", conf.ID)
+	logger.Logger().Info("Postgres container id: %s", conf.ID)
 
 	var prettyJSON bytes.Buffer
 	jsonBytes, err := json.Marshal(*conf.Config)
@@ -52,22 +51,22 @@ func StartPostgresContainer(ctx context.Context, t *testing.T) (string, error) {
 
 	err = json.Indent(&prettyJSON, jsonBytes, "", "  ")
 	require.NoError(t, err)
-	//t.Logf("Postgres Config: %s", prettyJSON.String())
+	//logger.Logger().Info("Postgres Config: %s", prettyJSON.String())
 
 	jsonBytes, err = json.Marshal(*conf.NetworkSettings)
 	require.NoError(t, err)
 	err = json.Indent(&prettyJSON, jsonBytes, "", "  ")
 	require.NoError(t, err)
-	//t.Logf("Postgres NetworkSettings: %+v", prettyJSON.String())
+	//logger.Logger().Info("Postgres NetworkSettings: %+v", prettyJSON.String())
 	host, err := postgresContainer.Host(ctx)
 	require.NoError(t, err)
-	t.Logf("Postgres host: %s", host)
+	logger.Logger().Info("Postgres host: %s", host)
 
 	port, err := postgresContainer.MappedPort(ctx, "5432")
 	require.NoError(t, err)
-	t.Logf("Postgres port: %s", port.Port())
+	logger.Logger().Info("Postgres port: %s", port.Port())
 
 	DSN := fmt.Sprintf("host=%s port=%s dbname=%s user=%s  password=%s sslmode=disable", "127.0.0.1", port.Port(), dbName, dbUser, dbPassword)
-	t.Logf("Postgres DSN: %s", DSN)
+	logger.Logger().Info("Postgres DSN: %s", DSN)
 	return DSN, err
 }

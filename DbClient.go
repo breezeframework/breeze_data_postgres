@@ -8,12 +8,32 @@ import (
 
 type DbClient interface {
 	Close() error
-	//pg() pg_api.PgDbClient
+	Pg() PgDbClient
 	RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f pg_api.TransactionalFlow) error
 }
 
 func NewDBClient(ctx context.Context, dsn string) (DbClient, error) {
-	return pg_api.NewPgDBClient(ctx, dsn)
+	client, err := NewPgDBClient(ctx, dsn)
+	if err != nil {
+		return nil, err
+	}
+	return &dbClientWrapper{pgClient: client}, nil
+}
+
+type dbClientWrapper struct {
+	pgClient PgDbClient
+}
+
+func (d *dbClientWrapper) Close() error {
+	return d.pgClient.Close()
+}
+
+func (d *dbClientWrapper) Pg() PgDbClient {
+	return d.pgClient
+}
+
+func (d *dbClientWrapper) RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f pg_api.TransactionalFlow) error {
+	return d.pgClient.RunTransaction(ctx, txOptions, f)
 }
 
 type DbApi interface {

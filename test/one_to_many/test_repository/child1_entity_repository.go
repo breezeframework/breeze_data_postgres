@@ -9,9 +9,18 @@ import (
 const CHILD1_TABLE = "TEST_CHILD1_TABLE "
 
 type Child1Entity struct {
-	ID        int64  `json:"ID"`
+	ID        int64  `json:"ID"` // ID field is mandatory
 	TYPE      string `json:"type"`
 	PARENT_ID int64  `json:"PARENT_ID"`
+}
+
+func (child *Child1Entity) GetParentID() int64 {
+	return child.PARENT_ID
+}
+
+func (child *Child1Entity) PushToParent(parent any) {
+	par := parent.(*ParentEntity)
+	par.Children1 = append(par.Children1, child)
 }
 
 const (
@@ -27,19 +36,18 @@ var Child1Entity_Fields = []string{
 }
 
 type Child1EntityRepository struct {
-	pg.Repository
+	pg.Repository[Child1Entity]
 }
 
 func NewChild1EntityRepository(db pg.DbClient) Child1EntityRepository {
 	repo := pg.NewRepository(
+		Child1Entity{},
 		db,
 		sq.Insert(CHILD1_TABLE).PlaceholderFormat(sq.Dollar).Columns(CHILD1ENTITY_TYPE, CHILD1ENTITY_PARENT_ID),
 		sq.Select(Child1Entity_Fields...).From(CHILD1_TABLE),
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
-		child1EntityConverter,
-		nil,
-		func(entity any) int64 { return entity.(*Child1Entity).ID })
+		child1EntityConverter)
 	return Child1EntityRepository{repo}
 }
 
@@ -48,20 +56,13 @@ func child1EntityConverter(row pgx.Row) any {
 	if err := row.Scan(&obj.ID, &obj.TYPE, &obj.PARENT_ID); err != nil {
 		panic(err)
 	}
-	return obj
+	return &obj
 }
 
-func OneToManyChild1Entity(db pg.DbClient) pg.Relation[ParentEntity, Child1Entity] {
-	return pg.Relation[ParentEntity, Child1Entity]{
+func OneToManyChild1EntityRelation(db pg.DbClient) pg.Relation[Child1Entity] {
+	return pg.Relation[Child1Entity]{
 		ForeignKey: CHILD1ENTITY_PARENT_ID,
 		Repo:       NewChild1EntityRepository(db).Repository,
-		ParentSetter: func(parent any, related any) {
-			p := (*parent.(*interface{})).(*ParentEntity)
-			if p.Children1 == nil {
-				p.Children1 = []any{}
-			}
-			p.Children1 = append(p.Children1, related)
-		},
 		ParentIdGetter: func(child Child1Entity) int64 {
 			return child.PARENT_ID
 		},

@@ -2,7 +2,6 @@ package pg_api
 
 import (
 	"context"
-	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
 	"github.com/simpleGorm/pg/internal/transaction"
@@ -40,7 +39,6 @@ func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction
 		if err != nil {
 			if errRollback := tx.Rollback(ctx); errRollback != nil {
 				//errRollback := errors.Wrapf(err, "errRollback: %v", errRollback)
-				fmt.Println(errRollback)
 				panic(errRollback)
 			}
 		}

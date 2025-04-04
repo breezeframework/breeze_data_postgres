@@ -7,28 +7,37 @@ import (
 	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/closer"
 	"github.com/simpleGorm/pg/internal/transaction"
+	"github.com/simpleGorm/pg/pkg/logger"
 	"github.com/simpleGorm/pg/test/plain"
 	"github.com/simpleGorm/pg/test/test_utils"
 	"github.com/stretchr/testify/require"
+	"log/slog"
+	"os"
+	"runtime/debug"
 	"testing"
 )
 
-func TestPlainEntityRepositoryIT(t *testing.T) {
+func TestPlain(t *testing.T) {
+
+	logger.SetLogger(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelError})))
 
 	ctx := context.Background()
 	DSN, err := test_utils.StartPostgresContainer(ctx, t)
 
 	dbClient, err := pg.NewDBClient(ctx, DSN)
-
 	require.NoError(t, err)
-	// Define dbclient gracefull shutdown
 	closer.Add(dbClient.Close)
+	// Define dbclient gracefull shutdown
 	defer func() {
 		if r := recover(); r != nil {
 			// handle panic errors
+			logger.Logger().Error("panic: %v", r)
+			t.Fatalf("panic: %v", string(debug.Stack()))
+			//closer.CloseAll()
+			//closer.Wait()
+		} else {
 			closer.CloseAll()
-			closer.Wait()
-			t.Fatalf("panic: %v", r)
 		}
 		// Close db connection
 	}()
@@ -64,8 +73,8 @@ func TestPlainEntityRepositoryIT(t *testing.T) {
 		func(ctx context.Context) error {
 			id1 := myRepository.Create(ctx, 2, "field2_value_2")
 			id2 := myRepository.Create(ctx, 3, "field2_value_3")
-			t.Logf("id1: %d", id1)
-			t.Logf("id2: %d", id2)
+			logger.Logger().Info("", slog.Int64("id1", id1))
+			logger.Logger().Info("", slog.Int64("id2", id2))
 			if id1 != id2 {
 				// Rollback
 				return errors.Wrap(errors.New("Test error"), "Error condition achieved")
