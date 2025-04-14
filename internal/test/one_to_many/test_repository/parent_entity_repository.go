@@ -4,7 +4,6 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/simpleGorm/pg"
-	"github.com/simpleGorm/pg/pkg"
 )
 
 const TABLE_NAME = "TEST_PARENT_ENTITY_TABLE "
@@ -38,7 +37,7 @@ func (parent *ParentEntity) AddRelatedEntity(related any) {
 	parent.Children1 = append(parent.Children1, related)
 }
 
-func NewParentEntityRepository(db pkg.DbClient) ParentEntityRepository {
+func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
 	repo := pg.NewRepository(
 		ParentEntity{},
 		db,
