@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
-	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/test/plain"
 	"github.com/simpleGorm/pg/internal/test/test_utils"
 	"github.com/simpleGorm/pg/internal/transaction"
+	"github.com/simpleGorm/pg/pkg"
 	"github.com/simpleGorm/pg/pkg/closer"
 	"github.com/simpleGorm/pg/pkg/logger"
 	"github.com/stretchr/testify/require"
@@ -25,7 +25,7 @@ func TestPlain(t *testing.T) {
 	ctx := context.Background()
 	DSN, err := test_utils.StartPostgresContainer(ctx, t)
 
-	dbClient, err := pg.NewDBClient(ctx, DSN)
+	dbClient, err := pkg.NewDBClient(ctx, DSN)
 	require.NoError(t, err)
 	closer.Add(dbClient.Close)
 	// Define dbclient gracefull shutdown

@@ -1,4 +1,4 @@
-package pg
+package pkg
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 
 type DbClient interface {
 	Close() error
-	Pg() PgDbClient
+	Pg() pg_api.PgDbClient
 	RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f pg_api.TransactionalFlow) error
 }
 
 func NewDBClient(ctx context.Context, dsn string) (DbClient, error) {
-	client, err := NewPgDBClient(ctx, dsn)
+	client, err := pg_api.NewPgDBClient(ctx, dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -21,14 +21,14 @@ func NewDBClient(ctx context.Context, dsn string) (DbClient, error) {
 }
 
 type dbClientWrapper struct {
-	pgClient PgDbClient
+	pgClient pg_api.PgDbClient
 }
 
 func (d *dbClientWrapper) Close() error {
 	return d.pgClient.Close()
 }
 
-func (d *dbClientWrapper) Pg() PgDbClient {
+func (d *dbClientWrapper) Pg() pg_api.PgDbClient {
 	return d.pgClient
 }
 

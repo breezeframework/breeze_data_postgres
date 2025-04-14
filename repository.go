@@ -4,6 +4,8 @@ import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/simpleGorm/pg/internal/pg_api"
+	"github.com/simpleGorm/pg/pkg"
 )
 
 const (
@@ -24,7 +26,7 @@ type IRepository interface {
 
 type Repository[T any] struct {
 	anchor        T
-	DB            PgDbClient
+	DB            pg_api.PgDbClient
 	InsertBuilder sq.InsertBuilder
 	SelectBuilder sq.SelectBuilder
 	UpdateBuilder sq.UpdateBuilder
@@ -99,7 +101,7 @@ func (r Relation[R]) GetForeignKey() string {
 
 func NewRepository[T any](
 	anchor T,
-	db DbClient,
+	db pkg.DbClient,
 	insertBuilder sq.InsertBuilder,
 	selectBuilder sq.SelectBuilder,
 	updateBuilder sq.UpdateBuilder,
@@ -215,7 +217,7 @@ func (repo Repository[T]) Delete(ctx context.Context, id int64) int64 {
 	return repo.DB.API().ExecDelete(ctx, builder)
 }
 
-func update(ctx context.Context, api DbApi, updateBuilder sq.UpdateBuilder, fields map[string]interface{}) int64 {
+func update(ctx context.Context, api pkg.DbApi, updateBuilder sq.UpdateBuilder, fields map[string]interface{}) int64 {
 	for column, value := range fields {
 		updateBuilder = updateBuilder.Set(column, value)
 	}
