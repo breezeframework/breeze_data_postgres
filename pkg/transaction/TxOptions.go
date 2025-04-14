@@ -1,4 +1,4 @@
-package txoptions
+package transaction
 
 type TxIsoLevel string
 
@@ -10,7 +10,7 @@ const (
 	ReadUncommitted TxIsoLevel = "read uncommitted"
 )
 
-// TxAccessMode is the txoptions access mode (read write or read only)
+// TxAccessMode is the transaction access mode (read write or read only)
 type TxAccessMode string
 
 // Transaction access modes
@@ -19,7 +19,7 @@ const (
 	ReadOnly  TxAccessMode = "read only"
 )
 
-// TxDeferrableMode is the txoptions deferrable mode (deferrable or not deferrable)
+// TxDeferrableMode is the transaction deferrable mode (deferrable or not deferrable)
 type TxDeferrableMode string
 
 // Transaction deferrable modes
@@ -28,7 +28,7 @@ const (
 	NotDeferrable TxDeferrableMode = "not deferrable"
 )
 
-// TxOptions are txoptions modes within a txoptions block
+// TxOptions are transaction modes within a transaction block
 type TxOptions struct {
 	IsoLevel       TxIsoLevel
 	AccessMode     TxAccessMode

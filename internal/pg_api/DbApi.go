@@ -4,13 +4,13 @@ import (
 	"context"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
-	"github.com/simpleGorm/pg/pkg/txoptions"
+	"github.com/simpleGorm/pg/pkg/transaction"
 )
 
 type TransactionalFlow func(ctx context.Context) error
 
 type TxManager interface {
-	Transaction(ctx context.Context, opts txoptions.TxOptions, f TransactionalFlow) error
+	Transaction(ctx context.Context, opts transaction.TxOptions, f TransactionalFlow) error
 }
 
 type Query struct {
@@ -40,7 +40,7 @@ type QueryExecutor interface {
 	QueryContextSelect(ctx context.Context, builder squirrel.SelectBuilder, where map[string]interface{}) pgx.Rows
 	QueryRowContextSelect(ctx context.Context, builder squirrel.SelectBuilder) pgx.Row
 	QueryRowContextInsert(ctx context.Context, builder squirrel.InsertBuilder) pgx.Row
-	RunTransaction(ctx context.Context, txOptions txoptions.TxOptions, f TransactionalFlow) error
+	RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f TransactionalFlow) error
 }
 
 type Pinger interface {

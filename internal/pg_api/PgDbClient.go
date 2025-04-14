@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
-	"github.com/simpleGorm/pg/pkg/txoptions"
+	"github.com/simpleGorm/pg/pkg/transaction"
 )
 
 type PgDbClient struct {
@@ -24,7 +24,7 @@ func NewPgDBClient(ctx context.Context, dsn string) (PgDbClient, error) {
 	}, nil
 }
 
-func (c PgDbClient) RunTransaction(ctx context.Context, txOpts txoptions.TxOptions, f TransactionalFlow) error {
+func (c PgDbClient) RunTransaction(ctx context.Context, txOpts transaction.TxOptions, f TransactionalFlow) error {
 	return c.transactionManager.Transaction(ctx, txOpts, f)
 }
 
