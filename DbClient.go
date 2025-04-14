@@ -3,7 +3,7 @@ package pg
 import (
 	"context"
 	"github.com/simpleGorm/pg/internal/pg_api"
-	"github.com/simpleGorm/pg/pkg/transaction"
+	"github.com/simpleGorm/pg/internal/transaction"
 )
 
 type DbClient interface {
