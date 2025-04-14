@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
-	"github.com/simpleGorm/pg/internal/transaction"
+	"github.com/simpleGorm/pg/pkg/txoptions"
 )
 
 type PgTransactionManager struct {
@@ -17,7 +17,7 @@ func NewPgTransactionManager(db Transactor) *PgTransactionManager {
 	}
 }
 
-func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction.TxOptions, fn TransactionalFlow) (err error) {
+func (m *PgTransactionManager) Transaction(ctx context.Context, opts txoptions.TxOptions, fn TransactionalFlow) (err error) {
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
 		return fn(ctx)
@@ -26,7 +26,7 @@ func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction
 
 	tx, err = m.db.BeginTx(ctx, pgOpts)
 	if err != nil {
-		return errors.Wrap(err, "can't begin transaction")
+		return errors.Wrap(err, "can't begin txoptions")
 	}
 
 	ctx = MakeContextTx(ctx, tx)
@@ -53,7 +53,7 @@ func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction
 	}()
 
 	if err = fn(ctx); err != nil {
-		err = errors.Wrap(err, "failed executing code inside transaction")
+		err = errors.Wrap(err, "failed executing code inside txoptions")
 	}
 
 	/*if err != nil {
@@ -62,7 +62,7 @@ func (m *PgTransactionManager) Transaction(ctx context.Context, opts transaction
 	return err
 }
 
-func toPgOptions(txOptions transaction.TxOptions) pgx.TxOptions {
+func toPgOptions(txOptions txoptions.TxOptions) pgx.TxOptions {
 	return pgx.TxOptions{
 		IsoLevel:       pgx.TxIsoLevel(txOptions.IsoLevel),
 		AccessMode:     pgx.TxAccessMode(txOptions.AccessMode),
@@ -72,5 +72,5 @@ func toPgOptions(txOptions transaction.TxOptions) pgx.TxOptions {
 
 /*func (m *PgTransactionManager) ReadCommitted(ctx context.Context, f pkg.TransactionalFlow) error {
 	txOpts := pgx.TxOptions{IsoLevel: pgx.ReadCommitted}
-	return m.transaction(ctx, txOpts, f)
+	return m.txoptions(ctx, txOpts, f)
 }*/

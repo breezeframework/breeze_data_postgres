@@ -7,9 +7,9 @@ import (
 	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/test/plain"
 	"github.com/simpleGorm/pg/internal/test/test_utils"
-	"github.com/simpleGorm/pg/internal/transaction"
 	"github.com/simpleGorm/pg/pkg/closer"
 	"github.com/simpleGorm/pg/pkg/logger"
+	"github.com/simpleGorm/pg/pkg/txoptions"
 	"github.com/stretchr/testify/require"
 	"log/slog"
 	"os"
@@ -69,7 +69,7 @@ func TestPlain(t *testing.T) {
 	}
 
 	// Transaction
-	err = dbClient.API().RunTransaction(ctx, transaction.TxOptions{IsoLevel: transaction.ReadCommitted},
+	err = dbClient.API().RunTransaction(ctx, txoptions.TxOptions{IsoLevel: txoptions.ReadCommitted},
 		func(ctx context.Context) error {
 			id1 := myRepository.Create(ctx, 2, "field2_value_2")
 			id2 := myRepository.Create(ctx, 3, "field2_value_3")

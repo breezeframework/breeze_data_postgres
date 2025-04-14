@@ -7,8 +7,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/simpleGorm/pg/internal/prettier"
-	"github.com/simpleGorm/pg/internal/transaction"
 	"github.com/simpleGorm/pg/pkg/logger"
+	"github.com/simpleGorm/pg/pkg/txoptions"
 	"log"
 )
 
@@ -127,7 +127,7 @@ func (pg PG) QueryRowContextInsert(ctx context.Context, builder sq.InsertBuilder
 
 	return pg.API.QueryRow(ctx, query, args...)
 }
-func (pg PG) RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f TransactionalFlow) error {
+func (pg PG) RunTransaction(ctx context.Context, txOptions txoptions.TxOptions, f TransactionalFlow) error {
 	return pg.RunTransaction(ctx, txOptions, f)
 }
 func (pg PG) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) pgx.Row {
