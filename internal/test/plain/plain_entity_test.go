@@ -7,7 +7,8 @@ import (
 	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/test/plain"
 	"github.com/simpleGorm/pg/internal/test/test_utils"
-	"github.com/simpleGorm/pg/pkg"
+	"github.com/simpleGorm/pg/pkg/closer"
+	"github.com/simpleGorm/pg/pkg/logger"
 	"github.com/simpleGorm/pg/pkg/transaction"
 	"github.com/stretchr/testify/require"
 	"log/slog"
@@ -18,7 +19,7 @@ import (
 
 func TestPlain(t *testing.T) {
 
-	pkg.SetLogger(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	logger.SetLogger(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelError})))
 
 	ctx := context.Background()
@@ -26,17 +27,17 @@ func TestPlain(t *testing.T) {
 
 	dbClient, err := pg.NewDBClient(ctx, DSN)
 	require.NoError(t, err)
-	pkg.Add(dbClient.Close)
+	closer.Add(dbClient.Close)
 	// Define dbclient gracefull shutdown
 	defer func() {
 		if r := recover(); r != nil {
 			// handle panic errors
-			pkg.Logger().Error("panic: %v", r)
+			logger.Logger().Error("panic: %v", r)
 			t.Fatalf("panic: %v", string(debug.Stack()))
 			//closer.CloseAll()
 			//closer.Wait()
 		} else {
-			pkg.CloseAll()
+			closer.CloseAll()
 		}
 		// Close db connection
 	}()
@@ -72,8 +73,8 @@ func TestPlain(t *testing.T) {
 		func(ctx context.Context) error {
 			id1 := myRepository.Create(ctx, 2, "field2_value_2")
 			id2 := myRepository.Create(ctx, 3, "field2_value_3")
-			pkg.Logger().Info("", slog.Int64("id1", id1))
-			pkg.Logger().Info("", slog.Int64("id2", id2))
+			logger.Logger().Info("", slog.Int64("id1", id1))
+			logger.Logger().Info("", slog.Int64("id2", id2))
 			if id1 != id2 {
 				// Rollback
 				return errors.Wrap(errors.New("Test error"), "Error condition achieved")

@@ -6,7 +6,8 @@ import (
 	"github.com/simpleGorm/pg"
 	test_repository2 "github.com/simpleGorm/pg/internal/test/one_to_many/test_repository"
 	"github.com/simpleGorm/pg/internal/test/test_utils"
-	"github.com/simpleGorm/pg/pkg"
+	"github.com/simpleGorm/pg/pkg/closer"
+	"github.com/simpleGorm/pg/pkg/logger"
 	"github.com/stretchr/testify/require"
 	"log/slog"
 	"os"
@@ -15,24 +16,24 @@ import (
 )
 
 func TestOneToMany(t *testing.T) {
-	pkg.SetLogger(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	logger.SetLogger(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelError,
 	})))
 	ctx := context.Background()
 	DSN, err := test_utils.StartPostgresContainer(ctx, t)
 	dbClient, err := pg.NewDBClient(ctx, DSN)
 	require.NoError(t, err)
-	pkg.Add(dbClient.Close)
+	closer.Add(dbClient.Close)
 	// Define dbclient gracefull shutdown
 	defer func() {
 		if r := recover(); r != nil {
 			// handle panic errors
 			t.Logf("panic: %v", r)
 			t.Fatalf("panic: %v", string(debug.Stack()))
-			pkg.CloseAll()
-			pkg.Wait()
+			closer.CloseAll()
+			closer.Wait()
 		} else {
-			pkg.CloseAll()
+			closer.CloseAll()
 		}
 		// Close db connection
 	}()
@@ -52,7 +53,7 @@ func TestOneToMany(t *testing.T) {
 	marshalled, err := json.Marshal(&parentEntity)
 	require.NoError(t, err)
 	actual := string(marshalled)
-	pkg.Logger().Info(actual)
+	logger.Logger().Info(actual)
 
 	if EXPECTED != actual {
 		t.Errorf("\nExpected:\n%v\nGot:\n%v", EXPECTED, actual)
