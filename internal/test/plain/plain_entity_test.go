@@ -43,12 +43,12 @@ func TestPlain(t *testing.T) {
 	}()
 
 	myRepository := plain.NewTestPlainEntityRepository(dbClient)
-	field1_value := 10
-	field2_value := "field2_value"
-	id := myRepository.Create(ctx, field1_value, field2_value)
+	field1Value := 10
+	field2Value := "field2Value"
+	id := myRepository.Create(ctx, field1Value, field2Value)
 	myRepository.GetById(ctx, id)
 
-	myRepository.GetOneByField2(ctx, field2_value)
+	myRepository.GetOneByField2(ctx, field2Value)
 
 	myRepository.GetAll(ctx)
 
