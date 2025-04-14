@@ -108,7 +108,7 @@ func NewRepository[T any](
 	converter func(row pgx.Row) any) Repository[T] {
 	return Repository[T]{
 		anchor:        anchor,
-		DB:            db.Pg(),
+		DB:            db.API(),
 		InsertBuilder: insertBuilder, SelectBuilder: selectBuilder, UpdateBuilder: updateBuilder, DeleteBuilder: deleteBuilder,
 		Converter: converter,
 	}

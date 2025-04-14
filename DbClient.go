@@ -8,7 +8,7 @@ import (
 
 type DbClient interface {
 	Close() error
-	Pg() pg_api.PgDbClient
+	API() pg_api.PgDbClient
 	RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f pg_api.TransactionalFlow) error
 }
 
@@ -28,7 +28,7 @@ func (d *dbClientWrapper) Close() error {
 	return d.pgClient.Close()
 }
 
-func (d *dbClientWrapper) Pg() pg_api.PgDbClient {
+func (d *dbClientWrapper) API() pg_api.PgDbClient {
 	return d.pgClient
 }
 
