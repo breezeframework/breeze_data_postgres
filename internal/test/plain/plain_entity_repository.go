@@ -5,7 +5,6 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/simpleGorm/pg"
-	"github.com/simpleGorm/pg/pkg/repository"
 )
 
 const TABLE_NAME = "TEST_PLAIN_ENTITY_TABLE"
@@ -33,14 +32,14 @@ func (p TestPlainEntity) GetID() int64 {
 }
 
 type TestPlainEntityRepository struct {
-	repository.Repository[TestPlainEntity]
+	pg.Repository[TestPlainEntity]
 }
 
 var increaseField1Builder = sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar).
 	Set(Entity_field1, sq.Expr(Entity_field1+"+ 1")).Suffix("RETURNING " + Entity_id + ", " + Entity_field1 + "" + ", " + Entity_field2)
 
 func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
-	repo := repository.NewRepository(
+	repo := pg.NewRepository(
 		TestPlainEntity{},
 		db,
 		sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns(Entity_field1, Entity_field2),

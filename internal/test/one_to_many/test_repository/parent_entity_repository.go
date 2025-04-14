@@ -4,7 +4,6 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/simpleGorm/pg"
-	"github.com/simpleGorm/pg/pkg/repository"
 )
 
 const TABLE_NAME = "TEST_PARENT_ENTITY_TABLE "
@@ -27,7 +26,7 @@ type ParentEntity struct {
 }
 
 type ParentEntityRepository struct {
-	repository.Repository[ParentEntity]
+	pg.Repository[ParentEntity]
 }
 
 func (parent ParentEntity) GetID() int64 {
@@ -39,7 +38,7 @@ func (parent *ParentEntity) AddRelatedEntity(related any) {
 }
 
 func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
-	repo := repository.NewRepository(
+	repo := pg.NewRepository(
 		ParentEntity{},
 		db,
 		sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns(ParentEntity_name),
@@ -47,8 +46,8 @@ func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
 		parentEntityConverter)
-	child1Rel := repository.WrapRelation(OneToManyChild1EntityRelation(db))
-	child2Rel := repository.WrapRelation(OneToManyChild2EntityRelation(db))
+	child1Rel := pg.WrapRelation(OneToManyChild1EntityRelation(db))
+	child2Rel := pg.WrapRelation(OneToManyChild2EntityRelation(db))
 	repo.Relations = append(repo.Relations, child1Rel, child2Rel)
 	return ParentEntityRepository{repo}
 }

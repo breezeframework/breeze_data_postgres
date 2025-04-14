@@ -4,7 +4,6 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/simpleGorm/pg"
-	"github.com/simpleGorm/pg/pkg/repository"
 )
 
 const CHILD2_TABLE = "TEST_CHILD2_TABLE "
@@ -37,11 +36,11 @@ func (child *Child2Entity) PushToParent(parent any) {
 }
 
 type Child2EntityRepository struct {
-	repository.Repository[Child2Entity]
+	pg.Repository[Child2Entity]
 }
 
 func NewChild2EntityRepository(db pg.DbClient) Child2EntityRepository {
-	repo := repository.NewRepository(
+	repo := pg.NewRepository(
 		Child2Entity{},
 		db,
 		sq.Insert(CHILD2_TABLE).PlaceholderFormat(sq.Dollar).Columns(CHILD2ENTITY_SIZE, CHILD2ENTITY_PARENT_ID),
@@ -60,8 +59,8 @@ func child2EntityConverter(row pgx.Row) any {
 	return &obj
 }
 
-func OneToManyChild2EntityRelation(db pg.DbClient) repository.Relation[Child2Entity] {
-	return repository.Relation[Child2Entity]{
+func OneToManyChild2EntityRelation(db pg.DbClient) pg.Relation[Child2Entity] {
+	return pg.Relation[Child2Entity]{
 		ForeignKey: CHILD2ENTITY_PARENT_ID,
 		Repo:       NewChild2EntityRepository(db).Repository,
 		ParentIdGetter: func(child Child2Entity) int64 {
