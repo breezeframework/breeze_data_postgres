@@ -40,6 +40,7 @@ type QueryExecutor interface {
 	QueryContextSelect(ctx context.Context, builder squirrel.SelectBuilder, where map[string]interface{}) pgx.Rows
 	QueryRowContextSelect(ctx context.Context, builder squirrel.SelectBuilder) pgx.Row
 	QueryRowContextInsert(ctx context.Context, builder squirrel.InsertBuilder) pgx.Row
+	RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f TransactionalFlow) error
 }
 
 type Pinger interface {

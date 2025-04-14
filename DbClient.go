@@ -3,13 +3,11 @@ package pg
 import (
 	"context"
 	"github.com/simpleGorm/pg/internal/pg_api"
-	"github.com/simpleGorm/pg/internal/transaction"
 )
 
 type DbClient interface {
 	Close() error
 	API() pg_api.PgDbClient
-	RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f pg_api.TransactionalFlow) error
 }
 
 func NewDBClient(ctx context.Context, dsn string) (DbClient, error) {
@@ -30,10 +28,6 @@ func (d *dbClientWrapper) Close() error {
 
 func (d *dbClientWrapper) API() pg_api.PgDbClient {
 	return d.pgClient
-}
-
-func (d *dbClientWrapper) RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f pg_api.TransactionalFlow) error {
-	return d.pgClient.RunTransaction(ctx, txOptions, f)
 }
 
 type DbApi interface {

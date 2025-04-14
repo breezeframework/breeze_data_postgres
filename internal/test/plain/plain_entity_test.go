@@ -69,7 +69,7 @@ func TestPlain(t *testing.T) {
 	}
 
 	// Transaction
-	err = dbClient.RunTransaction(ctx, transaction.TxOptions{IsoLevel: transaction.ReadCommitted},
+	err = dbClient.API().RunTransaction(ctx, transaction.TxOptions{IsoLevel: transaction.ReadCommitted},
 		func(ctx context.Context) error {
 			id1 := myRepository.Create(ctx, 2, "field2_value_2")
 			id2 := myRepository.Create(ctx, 3, "field2_value_3")
