@@ -105,12 +105,12 @@ func NewRepository[T any](
 	selectBuilder sq.SelectBuilder,
 	updateBuilder sq.UpdateBuilder,
 	deleteBuilder sq.DeleteBuilder,
-	converter func(row pgx.Row) any) Repository[T] {
+	converter func(row pgx.Row) *T) Repository[T] {
 	return Repository[T]{
 		anchor:        anchor,
 		DB:            db.API(),
 		InsertBuilder: insertBuilder, SelectBuilder: selectBuilder, UpdateBuilder: updateBuilder, DeleteBuilder: deleteBuilder,
-		Converter: converter,
+		Converter: func(row pgx.Row) any { return converter(row) },
 	}
 }
 
