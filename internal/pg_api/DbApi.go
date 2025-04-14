@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
-	"github.com/simpleGorm/pg/internal/transaction"
+	"github.com/simpleGorm/pg/pkg/transaction"
 )
 
 type TransactionalFlow func(ctx context.Context) error

@@ -5,7 +5,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pkg/errors"
 	"github.com/simpleGorm/pg/internal/pg_api"
-	"github.com/simpleGorm/pg/internal/transaction"
+	"github.com/simpleGorm/pg/pkg/transaction"
 )
 
 type PgDbClient struct {

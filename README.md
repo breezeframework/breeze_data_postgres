@@ -3,7 +3,7 @@
 ## Example
 
 ### 1. Create specific repository
-Working example locates [here](test/testing_repository.go)
+Working example locates [here](internal/test/testing_repository.go)
 ``` go
 
 package repository
@@ -67,7 +67,7 @@ func (repo *TestObjRepository) IncreaseField1(ctx context.Context, id int64) int
 
 ```
 ### 2. Usage
-Working test locates [here](test/repository_test.go)
+Working test locates [here](internal/test/repository_test.go)
 ``` go
     DSN := "connection string"
     ctx := context.Background()

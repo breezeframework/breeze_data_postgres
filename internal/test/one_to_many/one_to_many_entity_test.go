@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/simpleGorm/pg"
-	"github.com/simpleGorm/pg/internal/closer"
-	"github.com/simpleGorm/pg/pkg/logger"
-	"github.com/simpleGorm/pg/test/one_to_many/test_repository"
-	"github.com/simpleGorm/pg/test/test_utils"
+	test_repository2 "github.com/simpleGorm/pg/internal/test/one_to_many/test_repository"
+	"github.com/simpleGorm/pg/internal/test/test_utils"
+	"github.com/simpleGorm/pg/pkg"
 	"github.com/stretchr/testify/require"
 	"log/slog"
 	"os"
@@ -16,31 +15,31 @@ import (
 )
 
 func TestOneToMany(t *testing.T) {
-	logger.SetLogger(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	pkg.SetLogger(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelError,
 	})))
 	ctx := context.Background()
 	DSN, err := test_utils.StartPostgresContainer(ctx, t)
 	dbClient, err := pg.NewDBClient(ctx, DSN)
 	require.NoError(t, err)
-	closer.Add(dbClient.Close)
+	pkg.Add(dbClient.Close)
 	// Define dbclient gracefull shutdown
 	defer func() {
 		if r := recover(); r != nil {
 			// handle panic errors
 			t.Logf("panic: %v", r)
 			t.Fatalf("panic: %v", string(debug.Stack()))
-			closer.CloseAll()
-			closer.Wait()
+			pkg.CloseAll()
+			pkg.Wait()
 		} else {
-			closer.CloseAll()
+			pkg.CloseAll()
 		}
 		// Close db connection
 	}()
 
-	parentRepository := test_repository.NewParentEntityRepository(dbClient)
-	child1Repository := test_repository.NewChild1EntityRepository(dbClient)
-	child2Repository := test_repository.NewChild2EntityRepository(dbClient)
+	parentRepository := test_repository2.NewParentEntityRepository(dbClient)
+	child1Repository := test_repository2.NewChild1EntityRepository(dbClient)
+	child2Repository := test_repository2.NewChild2EntityRepository(dbClient)
 
 	parentId := parentRepository.Create(ctx, "PARENT")
 	child1Repository.Create(ctx, "TYPE1", parentId)
@@ -53,7 +52,7 @@ func TestOneToMany(t *testing.T) {
 	marshalled, err := json.Marshal(&parentEntity)
 	require.NoError(t, err)
 	actual := string(marshalled)
-	logger.Logger().Info(actual)
+	pkg.Logger().Info(actual)
 
 	if EXPECTED != actual {
 		t.Errorf("\nExpected:\n%v\nGot:\n%v", EXPECTED, actual)

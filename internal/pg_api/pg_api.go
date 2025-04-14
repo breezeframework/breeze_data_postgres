@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/simpleGorm/pg/internal/prettier"
-	"github.com/simpleGorm/pg/pkg/logger"
+	"github.com/simpleGorm/pg/pkg"
 	"log"
 )
 
@@ -50,9 +50,9 @@ func (pg PG) ExecUpdate(ctx context.Context, builder sq.UpdateBuilder) int64 {
 		panic(err)
 	}
 
-	logger.Logger().Info("[ExecUpdate] query: %s", query)
-	logger.Logger().Info("[ExecUpdate] args: %+v", args)
-	logger.Logger().Info("[ExecUpdate] err: %+v", err)
+	pkg.Logger().Info("[ExecUpdate] query: %s", query)
+	pkg.Logger().Info("[ExecUpdate] args: %+v", args)
+	pkg.Logger().Info("[ExecUpdate] err: %+v", err)
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	var tag pgconn.CommandTag
 	if ok {
@@ -75,10 +75,10 @@ func (pg PG) QueryContextSelect(ctx context.Context, builder sq.SelectBuilder, w
 		panic(err)
 	}
 
-	logger.Logger().Info("Generated SQL query:", query)
-	logger.Logger().Info("Arguments:", args)
-	logger.Logger().Info("ctx:", ctx)
-	logger.Logger().Info("ctx.Value(TxKey):", ctx.Value(TxKey))
+	pkg.Logger().Info("Generated SQL query:", query)
+	pkg.Logger().Info("Arguments:", args)
+	pkg.Logger().Info("ctx:", ctx)
+	pkg.Logger().Info("ctx.Value(TxKey):", ctx.Value(TxKey))
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	var rows pgx.Rows
 	if ok {
@@ -98,8 +98,8 @@ func (pg PG) QueryRowContextSelect(ctx context.Context, builder sq.SelectBuilder
 		panic(err)
 	}
 
-	logger.Logger().Info("Generated SQL query:", query)
-	logger.Logger().Info("Arguments:", args)
+	pkg.Logger().Info("Generated SQL query:", query)
+	pkg.Logger().Info("Arguments:", args)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
@@ -116,8 +116,8 @@ func (pg PG) QueryRowContextInsert(ctx context.Context, builder sq.InsertBuilder
 		panic(err)
 	}
 
-	logger.Logger().Info("Generated SQL query:", query)
-	logger.Logger().Info("Arguments:", args)
+	pkg.Logger().Info("Generated SQL query:", query)
+	pkg.Logger().Info("Arguments:", args)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
@@ -133,8 +133,8 @@ func (pg PG) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) pgx.
 		panic(err)
 	}
 
-	logger.Logger().Info("Generated SQL query:", query)
-	logger.Logger().Info("Arguments:", args)
+	pkg.Logger().Info("Generated SQL query:", query)
+	pkg.Logger().Info("Arguments:", args)
 
 	tx, ok := ctx.Value(TxKey).(pgx.Tx)
 	if ok {
@@ -217,7 +217,7 @@ func MakeContextTx(ctx context.Context, tx pgx.Tx) context.Context {
 
 func logQuery(q Query, args ...interface{}) {
 	prettyQuery := prettier.Pretty(q.QueryRaw, prettier.PlaceholderDollar, args...)
-	logger.Logger().Info("sql: %s", q.Name)
-	logger.Logger().Info("query: %s", prettyQuery)
+	pkg.Logger().Info("sql: %s", q.Name)
+	pkg.Logger().Info("query: %s", prettyQuery)
 
 }

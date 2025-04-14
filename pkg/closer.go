@@ -1,7 +1,6 @@
-package closer
+package pkg
 
 import (
-	"github.com/simpleGorm/pg/pkg/logger"
 	"os"
 	"os/signal"
 	"sync"
@@ -79,7 +78,7 @@ func (c *Closer) CloseAll() {
 
 		for i := 0; i < cap(errs); i++ {
 			if err := <-errs; err != nil {
-				logger.Logger().Warn("apperror returned from Closer")
+				Logger().Warn("apperror returned from Closer")
 			}
 		}
 	})
