@@ -25,6 +25,7 @@ type Transactor interface {
 type SQLExecutor interface {
 	//NamedQueryExecutor
 	QueryExecutor
+	Pinger
 }
 
 type NamedQueryExecutor interface {
