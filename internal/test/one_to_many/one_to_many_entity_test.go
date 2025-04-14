@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/closer"
+	test_repository2 "github.com/simpleGorm/pg/internal/test/one_to_many/test_repository"
+	"github.com/simpleGorm/pg/internal/test/test_utils"
 	"github.com/simpleGorm/pg/pkg/logger"
-	"github.com/simpleGorm/pg/test/one_to_many/test_repository"
-	"github.com/simpleGorm/pg/test/test_utils"
 	"github.com/stretchr/testify/require"
 	"log/slog"
 	"os"
@@ -38,9 +38,9 @@ func TestOneToMany(t *testing.T) {
 		// Close db connection
 	}()
 
-	parentRepository := test_repository.NewParentEntityRepository(dbClient)
-	child1Repository := test_repository.NewChild1EntityRepository(dbClient)
-	child2Repository := test_repository.NewChild2EntityRepository(dbClient)
+	parentRepository := test_repository2.NewParentEntityRepository(dbClient)
+	child1Repository := test_repository2.NewChild1EntityRepository(dbClient)
+	child2Repository := test_repository2.NewChild2EntityRepository(dbClient)
 
 	parentId := parentRepository.Create(ctx, "PARENT")
 	child1Repository.Create(ctx, "TYPE1", parentId)
