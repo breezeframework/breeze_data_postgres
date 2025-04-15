@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
-	"github.com/simpleGorm/pg/internal/transaction"
+	"github.com/simpleGorm/pg/pkg/transaction"
 )
 
 type TransactionalFlow func(ctx context.Context) error
@@ -25,6 +25,7 @@ type Transactor interface {
 type SQLExecutor interface {
 	//NamedQueryExecutor
 	QueryExecutor
+	Pinger
 }
 
 type NamedQueryExecutor interface {
@@ -39,6 +40,7 @@ type QueryExecutor interface {
 	QueryContextSelect(ctx context.Context, builder squirrel.SelectBuilder, where map[string]interface{}) pgx.Rows
 	QueryRowContextSelect(ctx context.Context, builder squirrel.SelectBuilder) pgx.Row
 	QueryRowContextInsert(ctx context.Context, builder squirrel.InsertBuilder) pgx.Row
+	RunTransaction(ctx context.Context, txOptions transaction.TxOptions, f TransactionalFlow) error
 }
 
 type Pinger interface {

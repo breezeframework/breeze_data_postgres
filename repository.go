@@ -4,6 +4,7 @@ import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/simpleGorm/pg/internal/pg_api"
 )
 
 const (
@@ -24,7 +25,7 @@ type IRepository interface {
 
 type Repository[T any] struct {
 	anchor        T
-	DB            PgDbClient
+	DB            pg_api.PgDbClient
 	InsertBuilder sq.InsertBuilder
 	SelectBuilder sq.SelectBuilder
 	UpdateBuilder sq.UpdateBuilder
@@ -104,12 +105,12 @@ func NewRepository[T any](
 	selectBuilder sq.SelectBuilder,
 	updateBuilder sq.UpdateBuilder,
 	deleteBuilder sq.DeleteBuilder,
-	converter func(row pgx.Row) any) Repository[T] {
+	converter func(row pgx.Row) *T) Repository[T] {
 	return Repository[T]{
 		anchor:        anchor,
-		DB:            db.Pg(),
+		DB:            db.API(),
 		InsertBuilder: insertBuilder, SelectBuilder: selectBuilder, UpdateBuilder: updateBuilder, DeleteBuilder: deleteBuilder,
-		Converter: converter,
+		Converter: func(row pgx.Row) any { return converter(row) },
 	}
 }
 

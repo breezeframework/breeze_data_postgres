@@ -5,11 +5,11 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
 	"github.com/simpleGorm/pg"
-	"github.com/simpleGorm/pg/internal/closer"
-	"github.com/simpleGorm/pg/internal/transaction"
+	"github.com/simpleGorm/pg/internal/test/plain"
+	"github.com/simpleGorm/pg/internal/test/test_utils"
+	"github.com/simpleGorm/pg/pkg/closer"
 	"github.com/simpleGorm/pg/pkg/logger"
-	"github.com/simpleGorm/pg/test/plain"
-	"github.com/simpleGorm/pg/test/test_utils"
+	"github.com/simpleGorm/pg/pkg/transaction"
 	"github.com/stretchr/testify/require"
 	"log/slog"
 	"os"
@@ -43,12 +43,12 @@ func TestPlain(t *testing.T) {
 	}()
 
 	myRepository := plain.NewTestPlainEntityRepository(dbClient)
-	field1_value := 10
-	field2_value := "field2_value"
-	id := myRepository.Create(ctx, field1_value, field2_value)
+	field1Value := 10
+	field2Value := "field2Value"
+	id := myRepository.Create(ctx, field1Value, field2Value)
 	myRepository.GetById(ctx, id)
 
-	myRepository.GetOneByField2(ctx, field2_value)
+	myRepository.GetOneByField2(ctx, field2Value)
 
 	myRepository.GetAll(ctx)
 
@@ -69,7 +69,7 @@ func TestPlain(t *testing.T) {
 	}
 
 	// Transaction
-	err = dbClient.RunTransaction(ctx, transaction.TxOptions{IsoLevel: transaction.ReadCommitted},
+	err = dbClient.API().RunTransaction(ctx, transaction.TxOptions{IsoLevel: transaction.ReadCommitted},
 		func(ctx context.Context) error {
 			id1 := myRepository.Create(ctx, 2, "field2_value_2")
 			id2 := myRepository.Create(ctx, 3, "field2_value_3")

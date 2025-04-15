@@ -40,7 +40,7 @@ type Child2EntityRepository struct {
 }
 
 func NewChild2EntityRepository(db pg.DbClient) Child2EntityRepository {
-	repo := pg.NewRepository(
+	repo := pg.NewRepository[Child2Entity](
 		Child2Entity{},
 		db,
 		sq.Insert(CHILD2_TABLE).PlaceholderFormat(sq.Dollar).Columns(CHILD2ENTITY_SIZE, CHILD2ENTITY_PARENT_ID),
@@ -51,7 +51,7 @@ func NewChild2EntityRepository(db pg.DbClient) Child2EntityRepository {
 	return Child2EntityRepository{repo}
 }
 
-func child2EntityConverter(row pgx.Row) any {
+func child2EntityConverter(row pgx.Row) *Child2Entity {
 	var obj Child2Entity
 	if err := row.Scan(&obj.ID, &obj.SIZE, &obj.PARENT_ID); err != nil {
 		panic(err)

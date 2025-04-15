@@ -51,7 +51,7 @@ func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
 	return TestPlainEntityRepository{repo}
 }
 
-func testPlainEntityConverter(row pgx.Row) any {
+func testPlainEntityConverter(row pgx.Row) *TestPlainEntity {
 	var entity TestPlainEntity
 	if err := row.Scan(&entity.ID, &entity.Field1, &entity.Field2); err != nil {
 		panic(err)

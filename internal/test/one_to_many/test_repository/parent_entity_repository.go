@@ -38,7 +38,7 @@ func (parent *ParentEntity) AddRelatedEntity(related any) {
 }
 
 func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
-	repo := pg.NewRepository(
+	repo := pg.NewRepository[ParentEntity](
 		ParentEntity{},
 		db,
 		sq.Insert(TABLE_NAME).PlaceholderFormat(sq.Dollar).Columns(ParentEntity_name),
@@ -52,7 +52,7 @@ func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
 	return ParentEntityRepository{repo}
 }
 
-func parentEntityConverter(rows pgx.Row) any {
+func parentEntityConverter(rows pgx.Row) *ParentEntity {
 	var parent ParentEntity
 	if err := rows.Scan(&parent.ID, &parent.Name); err != nil {
 		panic(err)
