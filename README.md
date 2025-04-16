@@ -74,7 +74,7 @@ func (repo *TestObjRepository) IncreaseField1(ctx context.Context, id int64) int
 
 ```
 ### 2. Usage
-Up to date working examples locates [here](internal/test/plain/plain_entity_test.go) and [here](internal/test/one_to_many_/one_to_many_entity_test.go)
+Up to date working examples locates [here](internal/test/plain/plain_entity_test.go) and [here](internal/test/one_to_many/one_to_many_entity_test.go)
 ``` go
     DSN := "connection string"
     ctx := context.Background()
