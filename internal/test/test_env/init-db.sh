@@ -1,27 +1,37 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+
+# Validate required environment variables
+: "${POSTGRES_USER:?Postgres username must be set}"
+: "${POSTGRES_DB:?Postgres database name must be set}"
+
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-    CREATE TABLE IF NOT EXISTS TEST_PLAIN_ENTITY_TABLE (
-        ID SERIAL PRIMARY KEY,
-        FIELD1 INT,
-        FIELD2 TEXT
-    );
-    CREATE TABLE IF NOT EXISTS TEST_PARENT_ENTITY_TABLE (
-        ID SERIAL PRIMARY KEY,
-        NAME TEXT
-    );
-    CREATE TABLE IF NOT EXISTS TEST_CHILD1_TABLE (
-        ID SERIAL PRIMARY KEY,
-        TYPE TEXT,
-        PARENT_ID INT,
-        FOREIGN KEY (PARENT_ID) REFERENCES TEST_PARENT_ENTITY_TABLE (id)
+    CREATE TABLE IF NOT EXISTS test_plain_entity_table (
+        id SERIAL PRIMARY KEY,
+        field1 INTEGER,
+        field2 TEXT
     );
 
-    CREATE TABLE IF NOT EXISTS TEST_CHILD2_TABLE (
-        ID SERIAL PRIMARY KEY,
-        SIZE float,
-        PARENT_ID INT,
-        FOREIGN KEY (PARENT_ID) REFERENCES TEST_PARENT_ENTITY_TABLE (id)
+    CREATE TABLE IF NOT EXISTS test_parent_entity_table (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS test_child1_table (
+        id SERIAL PRIMARY KEY,
+        type TEXT NOT NULL,
+        parent_id INTEGER NOT NULL,
+        FOREIGN KEY (parent_id) REFERENCES test_parent_entity_table(id)
+            ON DELETE CASCADE
+            ON UPDATE RESTRICT
+    );
+
+    CREATE TABLE IF NOT EXISTS test_child2_table (
+        id SERIAL PRIMARY KEY,
+        size FLOAT NOT NULL,
+        parent_id INTEGER NOT NULL,
+        FOREIGN KEY (parent_id) REFERENCES test_parent_entity_table(id)
+            ON DELETE CASCADE
+            ON UPDATE RESTRICT
+    );
 EOSQL
