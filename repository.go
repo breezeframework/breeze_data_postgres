@@ -113,10 +113,16 @@ func NewRepository[T any](
 	}
 }
 
-func (repo *Repository[T]) loadRelations(ctx context.Context, parentEntities []*T) {
+func (repo *Repository[T]) loadRelations(ctx context.Context, objs []T) {
 	if len(repo.Relations) == 0 {
 		return
 	}
+
+	var parentEntities []*T
+	for i := range objs {
+		parentEntities = append(parentEntities, &objs[i])
+	}
+
 	var parentIds []int64
 	for _, entity := range parentEntities {
 		var ident Identifiable
@@ -159,16 +165,12 @@ func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int
 
 func (repo Repository[T]) GetById(ctx context.Context, id int64) T {
 	builder := repo.SelectBuilder.Where(sq.Eq{idColumn: id})
-	obj := repo.getById(ctx, builder)
-	if len(repo.Relations) > 0 {
-		var objs []*T
-		objs = append(objs, obj)
-		repo.loadRelations(ctx, objs)
-	}
+	obj := repo.getByIdInternal(ctx, builder)
+	repo.loadRelations(ctx, []T{*obj})
 	return *obj
 }
 
-func (repo Repository[T]) getById(ctx context.Context, builder sq.SelectBuilder) *T {
+func (repo Repository[T]) getByIdInternal(ctx context.Context, builder sq.SelectBuilder) *T {
 	row := repo.DB.QueryRowContextSelect(ctx, builder)
 	obj := repo.Converter(row)
 	return obj.(*T)
@@ -193,13 +195,7 @@ func (repo Repository[T]) convertToObjects(rows pgx.Rows) []T {
 func (repo Repository[T]) GetAll(ctx context.Context) []T {
 	rows := repo.DB.QueryContextSelect(ctx, repo.SelectBuilder, nil)
 	objs := repo.convertToObjects(rows)
-	if len(repo.Relations) > 0 {
-		var objPtrs []*T
-		for i := range objs {
-			objPtrs = append(objPtrs, &objs[i])
-		}
-		repo.loadRelations(ctx, objPtrs)
-	}
+	repo.loadRelations(ctx, objs)
 	return objs
 }
 
@@ -207,6 +203,7 @@ func (repo Repository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
 	builder := repo.SelectBuilder.Where(where)
 	rows := repo.DB.QueryContextSelect(ctx, builder, nil)
 	objs := repo.convertToObjects(rows)
+	repo.loadRelations(ctx, objs)
 	return objs
 }
 
@@ -234,10 +231,14 @@ func (repo Repository[T]) UpdateCollection(ctx context.Context, fields map[strin
 
 func (repo Repository[T]) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) any {
 	row := repo.DB.UpdateReturning(ctx, builder)
-	return repo.Converter(row)
+	obj := repo.Converter(row).(*T)
+	repo.loadRelations(ctx, []T{*obj})
+	return obj
 }
 
 func (repo Repository[T]) UpdateReturningWithExtendedConverter(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) any) any {
 	row := repo.DB.UpdateReturning(ctx, builder)
-	return entityConverter(row)
+	obj := entityConverter(row).(*T)
+	repo.loadRelations(ctx, []T{*obj})
+	return obj
 }
