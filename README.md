@@ -1,9 +1,16 @@
 # Golang module for CRUD database operations management
 
-## Example
+The library is simplifying write database access layer in Go programs 
+by supplying ORM approach - defining Entities and Repositories with minimal required code 
+and utilize them during your regular development without needs to write a lot of boilerplate code.
 
-### 1. Create specific repository
-Working example locates [here](internal/test/testing_repository.go)
+# Examples
+ 
+### Since the library is actively developing, the examples written below might be out of date, but explains the common idea, therefore for actual code please reference to links presented at top of each example.
+  
+
+### 1. Create specific entity/repository
+Up to date working examples locates [here](internal/test/plain/plain_entity_repository.go) and [here](internal/test/one_to_many/test_repository)
 ``` go
 
 package repository
@@ -67,7 +74,7 @@ func (repo *TestObjRepository) IncreaseField1(ctx context.Context, id int64) int
 
 ```
 ### 2. Usage
-Working test locates [here](internal/test/repository_test.go)
+Up to date working examples locates [here](internal/test/plain/plain_entity_test.go) and [here](internal/test/one_to_many_/one_to_many_entity_test.go)
 ``` go
     DSN := "connection string"
     ctx := context.Background()
