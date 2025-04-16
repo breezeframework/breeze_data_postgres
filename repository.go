@@ -197,18 +197,24 @@ func (repo Repository[T]) convertToObjects(rows pgx.Rows) []T {
 func (repo Repository[T]) GetAll(ctx context.Context) []T {
 	rows := repo.DB.QueryContextSelect(ctx, repo.SelectBuilder, nil)
 	objs := repo.convertToObjects(rows)
-	repo.loadRelationsForCollection(ctx, objs)
+	objs = repo.loadRelationsForCollection(ctx, objs)
 	return objs
 }
 
-func (repo Repository[T]) loadRelationsForCollection(ctx context.Context, objs []T) {
+func (repo Repository[T]) loadRelationsForCollection(ctx context.Context, objs []T) []T {
 	if len(repo.Relations) > 0 {
 		var objPtrs []*T
 		for i := range objs {
 			objPtrs = append(objPtrs, &objs[i])
 		}
 		repo.loadRelations(ctx, objPtrs)
+		var objs []T
+		for i := range objPtrs {
+			objs = append(objs, *objPtrs[i])
+		}
+		return objs
 	}
+	return objs
 }
 
 func (repo Repository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
