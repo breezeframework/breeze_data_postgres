@@ -1,0 +1,55 @@
+name: Auto Dependency Update
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Executes daily at midnight UTC
+  workflow_dispatch: # Allows manual execution of the workflow
+
+jobs:
+  dependency-update:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4.2.2
+
+    - name: Setup Golang
+      uses: actions/setup-go@v5.4.0
+      with:
+        go-version: 'stable'
+
+    - name: Set up Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Update dependencies
+      run: |
+        go get -u ./...
+        go mod tidy
+        git diff
+
+    - name: Commit and push changes
+      id: auto-commit-action
+      uses: stefanzweifel/git-auto-commit-action@v5.1.0
+      with:
+        commit_message: "chore: update dependencies"
+        file_pattern: |
+          go.mod
+          go.sum
+        branch: master 
+        commit_author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+         
+    - name: Trigger build
+      if: env.needs_update == 'true' && steps.auto-commit-action.outputs.changes_detected == 'true'
+      run: |
+        curl -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/actions/workflows/main.yml/dispatches \
+          -d "{
+            \"ref\": \"main\",
+            \"inputs\": {
+              \"release_tag\": \"${{ env.LATEST_TAG_NAME }}\"
+            }
+          }"
