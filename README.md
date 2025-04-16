@@ -4,6 +4,8 @@ The library is simplifying write database access layer in Go programs
 by supplying ORM approach - defining Entities and Repositories with minimal required code 
 and utilize them during your regular development without needs to write a lot of boilerplate code.
 
+Unlike other ORM libraries and frameworkes like GOrm etc. this library doesn't use reflection and has no performance penalty in usage it comparing to all-by-hand written code 
+
 # Examples
  
 ### Since the library is actively developing, the examples written below might be out of date, but explains the common idea, therefore for actual code please reference to links presented at top of each example.
