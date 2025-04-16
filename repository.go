@@ -203,14 +203,14 @@ func (repo Repository[T]) GetAll(ctx context.Context) []T {
 
 func (repo Repository[T]) loadRelationsForCollection(ctx context.Context, objs []T) []T {
 	if len(repo.Relations) > 0 {
-		var objPtrs []*T
+		ptrs := make([]*T, len(objs))
 		for i := range objs {
-			objPtrs = append(objPtrs, &objs[i])
+			ptrs[i] = &objs[i]
 		}
-		repo.loadRelations(ctx, objPtrs)
-		var objs []T
-		for i := range objPtrs {
-			objs = append(objs, *objPtrs[i])
+		repo.loadRelations(ctx, ptrs)
+		objs := make([]T, len(ptrs))
+		for i, p := range ptrs {
+			objs[i] = *p
 		}
 		return objs
 	}
@@ -221,7 +221,7 @@ func (repo Repository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
 	builder := repo.SelectBuilder.Where(where)
 	rows := repo.DB.QueryContextSelect(ctx, builder, nil)
 	objs := repo.convertToObjects(rows)
-	repo.loadRelationsForCollection(ctx, objs)
+	objs = repo.loadRelationsForCollection(ctx, objs)
 	return objs
 }
 
