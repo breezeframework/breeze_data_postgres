@@ -133,7 +133,7 @@ func (repo *Repository[T]) loadRelations(ctx context.Context, parentEntities []*
 
 	for _, rel := range repo.Relations {
 		whereClause := sq.Eq{rel.GetForeignKey(): parentIds}
-		relatedObjects := rel.getRepo().GetBy(ctx, whereClause)
+		relatedObjects := rel.Repo.GetBy(ctx, whereClause)
 
 		for _, related := range relatedObjects {
 			var parentId int64
