@@ -13,7 +13,7 @@ Unlike other ORM libraries and frameworks e.g. Gorm etc. this library doesn't us
 
 ### 1. Create specific entity/repository
 Up to date working examples locates [here](internal/test/plain/plain_entity_repository.go) and [here](internal/test/one_to_many/test_repository)
-``` go 
+``` go
 
 package repository
 
