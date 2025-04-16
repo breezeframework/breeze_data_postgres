@@ -6,8 +6,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/simpleGorm/pg/internal/logger"
 	"github.com/simpleGorm/pg/internal/prettier"
-	"github.com/simpleGorm/pg/pkg/logger"
 	"github.com/simpleGorm/pg/pkg/transaction"
 	"log"
 )
@@ -210,8 +210,9 @@ func (pg PG) Ping(ctx context.Context) error {
 	return pg.API.Ping(ctx)
 }
 
-func (pg PG) Close() {
+func (pg PG) Close() error {
 	pg.API.Close()
+	return nil
 }
 
 func MakeContextTx(ctx context.Context, tx pgx.Tx) context.Context {

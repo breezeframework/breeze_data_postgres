@@ -5,10 +5,10 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/pkg/errors"
 	"github.com/simpleGorm/pg"
+	"github.com/simpleGorm/pg/internal/closer"
+	"github.com/simpleGorm/pg/internal/logger"
 	"github.com/simpleGorm/pg/internal/test/plain"
 	"github.com/simpleGorm/pg/internal/test/test_utils"
-	"github.com/simpleGorm/pg/pkg/closer"
-	"github.com/simpleGorm/pg/pkg/logger"
 	"github.com/simpleGorm/pg/pkg/transaction"
 	"github.com/stretchr/testify/require"
 	"log/slog"
@@ -27,6 +27,7 @@ func TestPlain(t *testing.T) {
 
 	dbClient, err := pg.NewDBClient(ctx, DSN)
 	require.NoError(t, err)
+	dbClient.SetLogger(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError})))
 	closer.Add(dbClient.Close)
 	// Define dbclient gracefull shutdown
 	defer func() {
@@ -69,7 +70,7 @@ func TestPlain(t *testing.T) {
 	}
 
 	// Transaction
-	err = dbClient.API().RunTransaction(ctx, transaction.TxOptions{IsoLevel: transaction.ReadCommitted},
+	err = dbClient.RunTransaction(ctx, transaction.TxOptions{IsoLevel: transaction.ReadCommitted},
 		func(ctx context.Context) error {
 			id1 := myRepository.Create(ctx, 2, "field2_value_2")
 			id2 := myRepository.Create(ctx, 3, "field2_value_3")

@@ -4,7 +4,6 @@ import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
-	"github.com/simpleGorm/pg/internal/pg_api"
 )
 
 const (
@@ -25,7 +24,7 @@ type IRepository interface {
 
 type Repository[T any] struct {
 	anchor        T
-	DB            pg_api.PgDbClient
+	DB            DbClient
 	InsertBuilder sq.InsertBuilder
 	SelectBuilder sq.SelectBuilder
 	UpdateBuilder sq.UpdateBuilder
@@ -108,7 +107,7 @@ func NewRepository[T any](
 	converter func(row pgx.Row) *T) Repository[T] {
 	return Repository[T]{
 		anchor:        anchor,
-		DB:            db.API(),
+		DB:            db,
 		InsertBuilder: insertBuilder, SelectBuilder: selectBuilder, UpdateBuilder: updateBuilder, DeleteBuilder: deleteBuilder,
 		Converter: func(row pgx.Row) any { return converter(row) },
 	}
@@ -151,7 +150,7 @@ func (repo *Repository[T]) loadRelations(ctx context.Context, parentEntities []*
 func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int64 {
 	builder := repo.InsertBuilder.Suffix(RETURNING_ID).Values(values...)
 	var id int64
-	err := repo.DB.API().QueryRowContextInsert(ctx, builder).Scan(&id)
+	err := repo.DB.QueryRowContextInsert(ctx, builder).Scan(&id)
 	if err != nil {
 		panic(err)
 	}
@@ -170,7 +169,7 @@ func (repo Repository[T]) GetById(ctx context.Context, id int64) T {
 }
 
 func (repo Repository[T]) getById(ctx context.Context, builder sq.SelectBuilder) *T {
-	row := repo.DB.API().QueryRowContextSelect(ctx, builder)
+	row := repo.DB.QueryRowContextSelect(ctx, builder)
 	obj := repo.Converter(row)
 	return obj.(*T)
 }
@@ -192,7 +191,7 @@ func (repo Repository[T]) convertToObjects(rows pgx.Rows) []T {
 }
 
 func (repo Repository[T]) GetAll(ctx context.Context) []T {
-	rows := repo.DB.API().QueryContextSelect(ctx, repo.SelectBuilder, nil)
+	rows := repo.DB.QueryContextSelect(ctx, repo.SelectBuilder, nil)
 	objs := repo.convertToObjects(rows)
 	if len(repo.Relations) > 0 {
 		var objPtrs []*T
@@ -206,14 +205,14 @@ func (repo Repository[T]) GetAll(ctx context.Context) []T {
 
 func (repo Repository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
 	builder := repo.SelectBuilder.Where(where)
-	rows := repo.DB.API().QueryContextSelect(ctx, builder, nil)
+	rows := repo.DB.QueryContextSelect(ctx, builder, nil)
 	objs := repo.convertToObjects(rows)
 	return objs
 }
 
 func (repo Repository[T]) Delete(ctx context.Context, id int64) int64 {
 	builder := repo.DeleteBuilder.Where(sq.Eq{idColumn: id})
-	return repo.DB.API().ExecDelete(ctx, builder)
+	return repo.DB.ExecDelete(ctx, builder)
 }
 
 func update(ctx context.Context, api DbApi, updateBuilder sq.UpdateBuilder, fields map[string]interface{}) int64 {
@@ -225,20 +224,20 @@ func update(ctx context.Context, api DbApi, updateBuilder sq.UpdateBuilder, fiel
 
 func (repo Repository[T]) Update(ctx context.Context, fields map[string]interface{}, id int64) int64 {
 	builder := repo.UpdateBuilder.Where(sq.Eq{idColumn: id})
-	return update(ctx, repo.DB.API(), builder, fields)
+	return update(ctx, repo.DB, builder, fields)
 }
 
 func (repo Repository[T]) UpdateCollection(ctx context.Context, fields map[string]interface{}, where sq.Sqlizer) int64 {
 	builder := repo.UpdateBuilder.Where(where)
-	return update(ctx, repo.DB.API(), builder, fields)
+	return update(ctx, repo.DB, builder, fields)
 }
 
 func (repo Repository[T]) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) any {
-	row := repo.DB.API().UpdateReturning(ctx, builder)
+	row := repo.DB.UpdateReturning(ctx, builder)
 	return repo.Converter(row)
 }
 
 func (repo Repository[T]) UpdateReturningWithExtendedConverter(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) any) any {
-	row := repo.DB.API().UpdateReturning(ctx, builder)
+	row := repo.DB.UpdateReturning(ctx, builder)
 	return entityConverter(row)
 }

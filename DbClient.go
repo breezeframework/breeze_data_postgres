@@ -2,42 +2,42 @@ package pg
 
 import (
 	"context"
+	"github.com/simpleGorm/pg/internal/logger"
 	"github.com/simpleGorm/pg/internal/pg_api"
+	"log/slog"
 )
 
-type DbClient interface {
-	Close() error
-	API() pg_api.PgDbClient
+type DbClient struct {
+	DbApi
 }
 
 func NewDBClient(ctx context.Context, dsn string) (DbClient, error) {
 	client, err := pg_api.NewPgDBClient(ctx, dsn)
 	if err != nil {
-		return nil, err
+		return DbClient{}, err
 	}
-	return &dbClientWrapper{pgClient: client}, nil
-}
-
-type dbClientWrapper struct {
-	pgClient pg_api.PgDbClient
-}
-
-func (d *dbClientWrapper) Close() error {
-	return d.pgClient.Close()
-}
-
-func (d *dbClientWrapper) API() pg_api.PgDbClient {
-	return d.pgClient
+	return DbClient{client}, nil
 }
 
 type DbApi interface {
 	pg_api.SQLExecutor
 	pg_api.Transactor
 	Pinger
+	Closer
+}
 
-	Close()
+type Closer interface {
+	Close() error
 }
 
 type Pinger interface {
 	Ping(ctx context.Context) error
+}
+
+func (db DbClient) SetLogger(l *slog.Logger) {
+	logger.SetLogger(l)
+}
+
+func (db DbClient) Logger() *slog.Logger {
+	return logger.Logger()
 }

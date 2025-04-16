@@ -1,7 +1,7 @@
 package closer
 
 import (
-	"github.com/simpleGorm/pg/pkg/logger"
+	"github.com/simpleGorm/pg/internal/logger"
 	"os"
 	"os/signal"
 	"sync"
