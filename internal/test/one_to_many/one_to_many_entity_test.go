@@ -3,6 +3,7 @@ package oneToMany_entity_repository_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/Masterminds/squirrel"
 	"github.com/simpleGorm/pg"
 	"github.com/simpleGorm/pg/internal/closer"
 	"github.com/simpleGorm/pg/internal/logger"
@@ -50,15 +51,33 @@ func TestOneToMany(t *testing.T) {
 	child2Repository.Create(ctx, 0.7, parentId)
 
 	parentEntity := parentRepository.GetById(ctx, parentId)
+	actual := marshallActual(t, err, parentEntity)
+	if EXPECTED_ONE != actual {
+		t.Errorf("\nExpected:\n%v\nGot:\n%v", EXPECTED_ONE, actual)
+	}
 
-	marshalled, err := json.Marshal(&parentEntity)
+	parentEntities := parentRepository.GetAll(ctx)
+	actual = marshallActual(t, err, parentEntities)
+	if EXPECTED_MANY != actual {
+		t.Errorf("\nExpected:\n%v\nGot:\n%v", EXPECTED_MANY, actual)
+	}
+
+	parentEntities = parentRepository.GetBy(ctx, squirrel.NotEq{"id": 0})
+	actual = marshallActual(t, err, parentEntities)
+	if EXPECTED_MANY != actual {
+		t.Errorf("\nExpected:\n%v\nGot:\n%v", EXPECTED_MANY, actual)
+	}
+
+}
+
+func marshallActual(t *testing.T, err error, obj any) string {
+	marshalled, err := json.Marshal(&obj)
 	require.NoError(t, err)
 	actual := string(marshalled)
 	logger.Logger().Info(actual)
-
-	if EXPECTED != actual {
-		t.Errorf("\nExpected:\n%v\nGot:\n%v", EXPECTED, actual)
-	}
+	return actual
 }
 
-var EXPECTED = `{"ID":1,"Name":"PARENT","Children1":[{"ID":1,"type":"TYPE1","PARENT_ID":1},{"ID":2,"type":"TYPE2","PARENT_ID":1}],"Children2":[{"ID":1,"size":0.5,"PARENT_ID":1},{"ID":2,"size":0.7,"PARENT_ID":1}]}`
+var EXPECTED_ONE = `{"ID":1,"Name":"PARENT","Children1":[{"ID":1,"type":"TYPE1","PARENT_ID":1},{"ID":2,"type":"TYPE2","PARENT_ID":1}],"Children2":[{"ID":1,"size":0.5,"PARENT_ID":1},{"ID":2,"size":0.7,"PARENT_ID":1}]}`
+
+var EXPECTED_MANY = "[" + EXPECTED_ONE + "]"

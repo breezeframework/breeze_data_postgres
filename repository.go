@@ -160,12 +160,16 @@ func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int
 func (repo Repository[T]) GetById(ctx context.Context, id int64) T {
 	builder := repo.SelectBuilder.Where(sq.Eq{idColumn: id})
 	obj := repo.getById(ctx, builder)
+	repo.loadRelationsForOne(ctx, obj)
+	return *obj
+}
+
+func (repo Repository[T]) loadRelationsForOne(ctx context.Context, obj *T) {
 	if len(repo.Relations) > 0 {
 		var objs []*T
 		objs = append(objs, obj)
 		repo.loadRelations(ctx, objs)
 	}
-	return *obj
 }
 
 func (repo Repository[T]) getById(ctx context.Context, builder sq.SelectBuilder) *T {
@@ -193,6 +197,11 @@ func (repo Repository[T]) convertToObjects(rows pgx.Rows) []T {
 func (repo Repository[T]) GetAll(ctx context.Context) []T {
 	rows := repo.DB.QueryContextSelect(ctx, repo.SelectBuilder, nil)
 	objs := repo.convertToObjects(rows)
+	repo.loadRelationsForCollection(ctx, objs)
+	return objs
+}
+
+func (repo Repository[T]) loadRelationsForCollection(ctx context.Context, objs []T) {
 	if len(repo.Relations) > 0 {
 		var objPtrs []*T
 		for i := range objs {
@@ -200,13 +209,13 @@ func (repo Repository[T]) GetAll(ctx context.Context) []T {
 		}
 		repo.loadRelations(ctx, objPtrs)
 	}
-	return objs
 }
 
 func (repo Repository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
 	builder := repo.SelectBuilder.Where(where)
 	rows := repo.DB.QueryContextSelect(ctx, builder, nil)
 	objs := repo.convertToObjects(rows)
+	repo.loadRelationsForCollection(ctx, objs)
 	return objs
 }
 
@@ -234,10 +243,14 @@ func (repo Repository[T]) UpdateCollection(ctx context.Context, fields map[strin
 
 func (repo Repository[T]) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) any {
 	row := repo.DB.UpdateReturning(ctx, builder)
-	return repo.Converter(row)
+	obj := repo.Converter(row).(*T)
+	repo.loadRelationsForOne(ctx, obj)
+	return obj
 }
 
 func (repo Repository[T]) UpdateReturningWithExtendedConverter(ctx context.Context, builder sq.UpdateBuilder, entityConverter func(row pgx.Row) any) any {
 	row := repo.DB.UpdateReturning(ctx, builder)
-	return entityConverter(row)
+	obj := entityConverter(row).(*T)
+	repo.loadRelationsForOne(ctx, obj)
+	return obj
 }
