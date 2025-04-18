@@ -47,6 +47,7 @@ func NewChild1EntityRepository(db pg.DbClient) Child1EntityRepository {
 		sq.Select(Child1Entity_Fields...).From(CHILD1_TABLE),
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
+		sq.InsertBuilder{},
 		child1EntityConverter)
 	return Child1EntityRepository{repo}
 }

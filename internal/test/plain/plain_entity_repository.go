@@ -46,6 +46,7 @@ func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
 		sq.Select(Entity_Fields...).PlaceholderFormat(sq.Dollar).From(TABLE_NAME),
 		sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar),
 		sq.Delete(TABLE_NAME).PlaceholderFormat(sq.Dollar),
+		sq.InsertBuilder{},
 		testPlainEntityConverter)
 
 	return TestPlainEntityRepository{repo}

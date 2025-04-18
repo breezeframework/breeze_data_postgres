@@ -29,6 +29,7 @@ type Repository[T any] struct {
 	SelectBuilder sq.SelectBuilder
 	UpdateBuilder sq.UpdateBuilder
 	DeleteBuilder sq.DeleteBuilder
+	UpsertBuilder sq.InsertBuilder
 	Converter     func(row pgx.Row) any // type is any to allow generalization
 	Relations     []Relation[any]       // the relation type is any because it really any entity
 	AddRelated    func(*T, any)
@@ -43,6 +44,7 @@ func WrapRepository[R any](repo Repository[R]) Repository[any] {
 		SelectBuilder: repo.SelectBuilder,
 		UpdateBuilder: repo.UpdateBuilder,
 		DeleteBuilder: repo.DeleteBuilder,
+		UpsertBuilder: repo.UpsertBuilder,
 		Converter: func(row pgx.Row) any {
 			return repo.Converter(row) // Уже возвращает any, можно передавать напрямую
 		},
@@ -104,6 +106,7 @@ func NewRepository[T any](
 	selectBuilder sq.SelectBuilder,
 	updateBuilder sq.UpdateBuilder,
 	deleteBuilder sq.DeleteBuilder,
+	upsertBuilder sq.InsertBuilder,
 	converter func(row pgx.Row) *T) Repository[T] {
 	return Repository[T]{
 		anchor:        anchor,
@@ -149,6 +152,16 @@ func (repo *Repository[T]) loadRelations(ctx context.Context, parentEntities []*
 
 func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int64 {
 	builder := repo.InsertBuilder.Suffix(RETURNING_ID).Values(values...)
+	var id int64
+	err := repo.DB.QueryRowContextInsert(ctx, builder).Scan(&id)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
+func (repo Repository[T]) upsert(ctx context.Context, values ...interface{}) int64 {
+	builder := repo.UpsertBuilder.Suffix(RETURNING_ID).Values(values...)
 	var id int64
 	err := repo.DB.QueryRowContextInsert(ctx, builder).Scan(&id)
 	if err != nil {

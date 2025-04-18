@@ -45,6 +45,7 @@ func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
 		sq.Select(ParentEntity_Fields...).PlaceholderFormat(sq.Dollar).From(TABLE_NAME),
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
+		sq.InsertBuilder{},
 		parentEntityConverter)
 	child1Rel := pg.WrapRelation(OneToManyChild1EntityRelation(db))
 	child2Rel := pg.WrapRelation(OneToManyChild2EntityRelation(db))
