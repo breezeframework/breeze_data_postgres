@@ -13,6 +13,7 @@ const (
 
 type IRepository interface {
 	Create(ctx context.Context, values ...interface{}) int64
+	Upsert(ctx context.Context, values ...interface{}) int64
 	GetById(ctx context.Context, id int64) any
 	GetAll(ctx context.Context) []any
 	GetBy(ctx context.Context, where sq.Sqlizer) []any
@@ -111,7 +112,7 @@ func NewRepository[T any](
 	return Repository[T]{
 		anchor:        anchor,
 		DB:            db,
-		InsertBuilder: insertBuilder, SelectBuilder: selectBuilder, UpdateBuilder: updateBuilder, DeleteBuilder: deleteBuilder,
+		InsertBuilder: insertBuilder, SelectBuilder: selectBuilder, UpdateBuilder: updateBuilder, DeleteBuilder: deleteBuilder, UpsertBuilder: upsertBuilder,
 		Converter: func(row pgx.Row) any { return converter(row) },
 	}
 }
@@ -160,7 +161,7 @@ func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int
 	return id
 }
 
-func (repo Repository[T]) upsert(ctx context.Context, values ...interface{}) int64 {
+func (repo Repository[T]) Upsert(ctx context.Context, values ...interface{}) int64 {
 	builder := repo.UpsertBuilder.Suffix(RETURNING_ID).Values(values...)
 	var id int64
 	err := repo.DB.QueryRowContextInsert(ctx, builder).Scan(&id)
@@ -238,16 +239,16 @@ func (repo Repository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
 	return objs
 }
 
-func (repo Repository[T]) Delete(ctx context.Context, id int64) int64 {
-	builder := repo.DeleteBuilder.Where(sq.Eq{idColumn: id})
-	return repo.DB.ExecDelete(ctx, builder)
-}
-
 func update(ctx context.Context, api DbApi, updateBuilder sq.UpdateBuilder, fields map[string]interface{}) int64 {
 	for column, value := range fields {
 		updateBuilder = updateBuilder.Set(column, value)
 	}
 	return api.ExecUpdate(ctx, updateBuilder)
+}
+
+func (repo Repository[T]) Delete(ctx context.Context, id int64) int64 {
+	builder := repo.DeleteBuilder.Where(sq.Eq{idColumn: id})
+	return repo.DB.ExecDelete(ctx, builder)
 }
 
 func (repo Repository[T]) Update(ctx context.Context, fields map[string]interface{}, id int64) int64 {
