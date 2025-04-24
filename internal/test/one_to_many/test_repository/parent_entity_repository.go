@@ -3,6 +3,7 @@ package test_repository
 import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/lann/builder"
 	"github.com/simpleGorm/pg"
 )
 
@@ -46,6 +47,7 @@ func NewParentEntityRepository(db pg.DbClient) ParentEntityRepository {
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
 		sq.InsertBuilder{},
+		[]builder.Builder{},
 		parentEntityConverter)
 	child1Rel := pg.WrapRelation(OneToManyChild1EntityRelation(db))
 	child2Rel := pg.WrapRelation(OneToManyChild2EntityRelation(db))

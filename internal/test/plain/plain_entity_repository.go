@@ -4,6 +4,7 @@ import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/lann/builder"
 	"github.com/simpleGorm/pg"
 )
 
@@ -47,6 +48,7 @@ func NewTestPlainEntityRepository(db pg.DbClient) TestPlainEntityRepository {
 		sq.Update(TABLE_NAME).PlaceholderFormat(sq.Dollar),
 		sq.Delete(TABLE_NAME).PlaceholderFormat(sq.Dollar),
 		sq.InsertBuilder{},
+		[]builder.Builder{},
 		testPlainEntityConverter)
 
 	return TestPlainEntityRepository{repo}

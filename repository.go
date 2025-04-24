@@ -4,6 +4,7 @@ import (
 	"context"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/lann/builder"
 )
 
 const (
@@ -31,6 +32,7 @@ type Repository[T any] struct {
 	UpdateBuilder sq.UpdateBuilder
 	DeleteBuilder sq.DeleteBuilder
 	UpsertBuilder sq.InsertBuilder
+	ExtraBuilders []builder.Builder
 	Converter     func(row pgx.Row) any // type is any to allow generalization
 	Relations     []Relation[any]       // the relation type is any because it really any entity
 	AddRelated    func(*T, any)
@@ -46,6 +48,7 @@ func WrapRepository[R any](repo Repository[R]) Repository[any] {
 		UpdateBuilder: repo.UpdateBuilder,
 		DeleteBuilder: repo.DeleteBuilder,
 		UpsertBuilder: repo.UpsertBuilder,
+		ExtraBuilders: repo.ExtraBuilders,
 		Converter: func(row pgx.Row) any {
 			return repo.Converter(row) // Уже возвращает any, можно передавать напрямую
 		},
@@ -108,12 +111,14 @@ func NewRepository[T any](
 	updateBuilder sq.UpdateBuilder,
 	deleteBuilder sq.DeleteBuilder,
 	upsertBuilder sq.InsertBuilder,
+	extraBuilders []builder.Builder,
 	converter func(row pgx.Row) *T) Repository[T] {
 	return Repository[T]{
 		anchor:        anchor,
 		DB:            db,
 		InsertBuilder: insertBuilder, SelectBuilder: selectBuilder, UpdateBuilder: updateBuilder, DeleteBuilder: deleteBuilder, UpsertBuilder: upsertBuilder,
-		Converter: func(row pgx.Row) any { return converter(row) },
+		ExtraBuilders: extraBuilders,
+		Converter:     func(row pgx.Row) any { return converter(row) },
 	}
 }
 
@@ -152,9 +157,9 @@ func (repo *Repository[T]) loadRelations(ctx context.Context, parentEntities []*
 }
 
 func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int64 {
-	builder := repo.InsertBuilder.Suffix(RETURNING_ID).Values(values...)
+	repoBuilder := repo.InsertBuilder.Suffix(RETURNING_ID).Values(values...)
 	var id int64
-	err := repo.DB.QueryRowContextInsert(ctx, builder).Scan(&id)
+	err := repo.DB.QueryRowContextInsert(ctx, repoBuilder).Scan(&id)
 	if err != nil {
 		panic(err)
 	}
@@ -162,9 +167,9 @@ func (repo Repository[T]) Create(ctx context.Context, values ...interface{}) int
 }
 
 func (repo Repository[T]) Upsert(ctx context.Context, values ...interface{}) int64 {
-	builder := repo.UpsertBuilder.Suffix(RETURNING_ID).Values(values...)
+	repoBuilder := repo.UpsertBuilder.Suffix(RETURNING_ID).Values(values...)
 	var id int64
-	err := repo.DB.QueryRowContextInsert(ctx, builder).Scan(&id)
+	err := repo.DB.QueryRowContextInsert(ctx, repoBuilder).Scan(&id)
 	if err != nil {
 		panic(err)
 	}
@@ -172,8 +177,8 @@ func (repo Repository[T]) Upsert(ctx context.Context, values ...interface{}) int
 }
 
 func (repo Repository[T]) GetById(ctx context.Context, id int64) T {
-	builder := repo.SelectBuilder.Where(sq.Eq{idColumn: id})
-	obj := repo.getById(ctx, builder)
+	repoBuilder := repo.SelectBuilder.Where(sq.Eq{idColumn: id})
+	obj := repo.getById(ctx, repoBuilder)
 	repo.loadRelationsForOne(ctx, obj)
 	return *obj
 }
@@ -232,8 +237,8 @@ func (repo Repository[T]) loadRelationsForCollection(ctx context.Context, objs [
 }
 
 func (repo Repository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
-	builder := repo.SelectBuilder.Where(where)
-	rows := repo.DB.QueryContextSelect(ctx, builder, nil)
+	repoBuilder := repo.SelectBuilder.Where(where)
+	rows := repo.DB.QueryContextSelect(ctx, repoBuilder, nil)
 	objs := repo.convertToObjects(rows)
 	objs = repo.loadRelationsForCollection(ctx, objs)
 	return objs
@@ -247,18 +252,18 @@ func update(ctx context.Context, api DbApi, updateBuilder sq.UpdateBuilder, fiel
 }
 
 func (repo Repository[T]) Delete(ctx context.Context, id int64) int64 {
-	builder := repo.DeleteBuilder.Where(sq.Eq{idColumn: id})
-	return repo.DB.ExecDelete(ctx, builder)
+	repoBuilder := repo.DeleteBuilder.Where(sq.Eq{idColumn: id})
+	return repo.DB.ExecDelete(ctx, repoBuilder)
 }
 
 func (repo Repository[T]) Update(ctx context.Context, fields map[string]interface{}, id int64) int64 {
-	builder := repo.UpdateBuilder.Where(sq.Eq{idColumn: id})
-	return update(ctx, repo.DB, builder, fields)
+	repoBuilder := repo.UpdateBuilder.Where(sq.Eq{idColumn: id})
+	return update(ctx, repo.DB, repoBuilder, fields)
 }
 
 func (repo Repository[T]) UpdateCollection(ctx context.Context, fields map[string]interface{}, where sq.Sqlizer) int64 {
-	builder := repo.UpdateBuilder.Where(where)
-	return update(ctx, repo.DB, builder, fields)
+	repoBuilder := repo.UpdateBuilder.Where(where)
+	return update(ctx, repo.DB, repoBuilder, fields)
 }
 
 func (repo Repository[T]) UpdateReturning(ctx context.Context, builder sq.UpdateBuilder) any {

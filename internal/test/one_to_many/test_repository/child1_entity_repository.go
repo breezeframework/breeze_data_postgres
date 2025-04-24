@@ -3,6 +3,7 @@ package test_repository
 import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
+	"github.com/lann/builder"
 	"github.com/simpleGorm/pg"
 )
 
@@ -48,6 +49,7 @@ func NewChild1EntityRepository(db pg.DbClient) Child1EntityRepository {
 		sq.UpdateBuilder{},
 		sq.DeleteBuilder{},
 		sq.InsertBuilder{},
+		[]builder.Builder{},
 		child1EntityConverter)
 	return Child1EntityRepository{repo}
 }
