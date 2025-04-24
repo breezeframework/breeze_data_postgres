@@ -18,6 +18,7 @@ type IRepository interface {
 	GetById(ctx context.Context, id int64) any
 	GetAll(ctx context.Context) []any
 	GetBy(ctx context.Context, where sq.Sqlizer) []any
+	GetByBuilder(ctx context.Context, selectBuilder sq.SelectBuilder) []any
 	Delete(ctx context.Context, id int64) int64
 	UpdateCollection(ctx context.Context, fields map[string]interface{}, where sq.Sqlizer) int64
 	Update(ctx context.Context, fields map[string]interface{}, id int64) int64
@@ -236,12 +237,16 @@ func (repo Repository[T]) loadRelationsForCollection(ctx context.Context, objs [
 	return objs
 }
 
-func (repo Repository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
-	repoBuilder := repo.SelectBuilder.Where(where)
-	rows := repo.DB.QueryContextSelect(ctx, repoBuilder, nil)
+func (repo Repository[T]) GetByBuilder(ctx context.Context, selectBuilder sq.SelectBuilder) []T {
+	rows := repo.DB.QueryContextSelect(ctx, selectBuilder, nil)
 	objs := repo.convertToObjects(rows)
 	objs = repo.loadRelationsForCollection(ctx, objs)
 	return objs
+}
+
+func (repo Repository[T]) GetBy(ctx context.Context, where sq.Sqlizer) []T {
+	return repo.GetByBuilder(ctx, repo.SelectBuilder.Where(where))
+
 }
 
 func update(ctx context.Context, api DbApi, updateBuilder sq.UpdateBuilder, fields map[string]interface{}) int64 {
