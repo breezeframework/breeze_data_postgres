@@ -202,10 +202,12 @@ func (repo Repository[T]) convertToObjects(rows pgx.Rows) []T {
 	var objs []T
 	for rows.Next() {
 		obj := repo.Converter(rows)
-		if t, ok := obj.(*T); ok {
-			objs = append(objs, *t)
-		} else {
-			objs = append(objs, obj.(T))
+		if obj != nil {
+			if t, ok := obj.(*T); ok {
+				objs = append(objs, *t)
+			} else {
+				objs = append(objs, obj.(T))
+			}
 		}
 	}
 	if err := rows.Err(); err != nil {
